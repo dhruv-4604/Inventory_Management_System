@@ -1,8 +1,8 @@
 import React from 'react';
 import { Box, CssBaseline } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import TopBar from './TopBar';
-import Sidebar from './SideBar';
+import TopBar from './Components/TopBar';
+import Sidebar from './Components/SideBar';
 import MainContent from './MainContent';
 import './fonts.css';
 
