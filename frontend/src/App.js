@@ -1,41 +1,32 @@
 import React from 'react';
-import { Box, CssBaseline } from '@mui/material';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import TopBar from './Components/TopBar';
-import Sidebar from './Components/SideBar';
-import MainContent from './MainContent';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './fonts.css';
-
-
-const theme = createTheme({
-  typography: {
-    fontFamily: [
-      'ClashGrotesk-Medium',
-      '-apple-system',
-      'BlinkMacSystemFont',
-      '"Segoe UI"',
-      'Arial',
-      'sans-serif',
-    ].join(','),
-    h6: {
-      fontWeight: 600,
-    },
-    button: {
-      textTransform: 'none',
-    },
-  },
-});
+import SignInPage from './SignInPage';
+import SignUpPage from './SignUpPage';
+import Main from './Main';
+import Dashboard from './Dashboard';
+import Item from './Item';
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <Box sx={{ display: 'flex' }}>
-        <CssBaseline />
-        <TopBar />
-        <Sidebar />
-        <MainContent />
-      </Box>
-    </ThemeProvider>
+    <Router>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/signin" element={<SignInPage />} />
+        <Route path="/signup" element={<SignUpPage />} />
+
+        {/* Protected routes */}
+        <Route path="/" element={<Main />}>
+          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="inventory" element={<Item />} />
+          {/* Add more routes here as needed */}
+        </Route>
+
+        {/* Catch-all route for 404 */}
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </Router>
   );
 }
 

@@ -6,7 +6,6 @@ import {
   Typography, 
   Checkbox, 
   FormControlLabel, 
-  Link,
   Container,
   Grid
 } from '@mui/material';
@@ -18,7 +17,7 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import googleIcon from './google_icon.png';
 import illustration from './Illustration_Image.png';
 import mainLogo from './Components/logo.png';
-
+import { Link } from 'react-router-dom';
 import './fonts.css';
 
 // Styled components (reused from SignInPage)
@@ -146,6 +145,8 @@ const SignUpPage = () => {
             <StyledButton
               fullWidth
               variant="contained"
+              component={Link}
+              to='/home'
               sx={{ 
                 mb: 2, 
                 background: 'linear-gradient(90deg, #D1EA67 , #A6F15A )',
@@ -157,6 +158,8 @@ const SignUpPage = () => {
             <GradientBorderButton
               fullWidth
               variant="outlined"
+            
+
               startIcon={<img src={googleIcon} alt="Google" width="18" height="18" />}
               sx={{ 
                 mb: 2, 
@@ -167,7 +170,7 @@ const SignUpPage = () => {
               Signup using Google
             </GradientBorderButton>
             <Typography variant="body2" align="center" sx={{ fontFamily: 'ClashGrotesk-Medium' }}>
-              Already have an account? <Link href="#" sx={{ color: '#97C949', textDecoration: 'none' }}>Sign In</Link>
+              Already have an account? <Link to="/" sx={{ color: '#97C949', textDecoration: 'none' }}>Sign In</Link>
             </Typography>
           </Box>
         </Grid>

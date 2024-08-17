@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { 
   Drawer, List, ListItem, ListItemIcon, ListItemText, 
-  Box, Collapse, TextField, InputAdornment, Avatar, Typography
+  Box, Collapse, TextField, InputAdornment, Avatar, Typography,
+  Button
 } from '@mui/material';
 import { 
   ExpandLess, 
@@ -14,15 +15,18 @@ import InventoryIcon from '@mui/icons-material/Inventory';
 import SalesIcon from '@mui/icons-material/AttachMoney';
 import OrdersIcon from '@mui/icons-material/ShoppingCart';
 import mainlogo from './logo.png';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const DRAWER_WIDTH = 260;
 
-const SidebarItem = ({ icon, text, onClick, isExpandable, isExpanded, isSelected }) => (
+const SidebarItem = ({ icon, text, to, onClick, isExpandable, isExpanded, isSelected }) => (
   <ListItem 
     button 
+    component={Link}
+    to={to}
     onClick={onClick}
     sx={{
-        background:isSelected ? 'linear-gradient(90deg, #D1EA67 , #A6F15A )' : 'transparent',
+      background: isSelected ? 'linear-gradient(90deg, #D1EA67 , #A6F15A )' : 'transparent',
       color: isSelected ? '#000' : 'inherit',
       '&:hover': {
         backgroundColor: isSelected ? '#9AE6B4' : 'rgba(0, 0, 0, 0.04)',
@@ -49,6 +53,8 @@ const ExpandableSidebarItem = ({ items, isExpanded }) => (
         {items.map((item, index) => (
           <ListItem 
             button 
+            component={Link}
+            to={item.to}
             key={index} 
             sx={{ 
               '&:hover': {
@@ -59,7 +65,7 @@ const ExpandableSidebarItem = ({ items, isExpanded }) => (
               padding: '8px 16px',
             }}
           >
-            <ListItemText primary={item} sx={{ color: '#757575' }} />
+            <ListItemText primary={item.text} sx={{ color: '#757575' }} />
           </ListItem>
         ))}
       </Box>
@@ -69,23 +75,27 @@ const ExpandableSidebarItem = ({ items, isExpanded }) => (
 
 function Sidebar() {
   const [expandedItem, setExpandedItem] = useState('Inventory');
-  const [selectedItem, setSelectedItem] = useState('Dashboard');
   const [searchTerm, setSearchTerm] = useState('');
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const sidebarItems = [
-    { icon: <DashboardIcon />, text: 'Dashboard' },
+    { icon: <DashboardIcon />, text: 'Dashboard', to: '/dashboard' },
     { 
       icon: <InventoryIcon />, 
       text: 'Inventory', 
       isExpandable: true,
-      subItems: ['Manage Items', 'Manage Category', 'Update Products']
+      to: '/inventory',
+      subItems: [
+        { text: 'Items', to: '/inventory/items' },
+        { text: 'Categories', to: '/inventory/categories' }
+      ]
     },
-    { icon: <SalesIcon />, text: 'Sales' },
-    { icon: <OrdersIcon />, text: 'Orders' },
+    { icon: <SalesIcon />, text: 'Sales', to: '/sales' },
+    { icon: <OrdersIcon />, text: 'Orders', to: '/orders' },
   ];
 
   const handleItemClick = (itemText) => {
-    setSelectedItem(itemText);
     if (itemText === expandedItem) {
       setExpandedItem(null);
     } else if (sidebarItems.find(item => item.text === itemText)?.isExpandable) {
@@ -97,6 +107,11 @@ function Sidebar() {
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
+  };
+
+  const handleLogout = () => {
+    // Implement logout logic here
+    navigate('/signin');
   };
 
   return (
@@ -149,10 +164,11 @@ function Sidebar() {
             <SidebarItem
               icon={item.icon}
               text={item.text}
+              to={item.to}
               onClick={() => handleItemClick(item.text)}
               isExpandable={item.isExpandable}
               isExpanded={expandedItem === item.text}
-              isSelected={selectedItem === item.text}
+              isSelected={location.pathname === item.to || location.pathname.startsWith(`${item.to}/`)}
             />
             {item.isExpandable && (
               <ExpandableSidebarItem 
@@ -181,7 +197,9 @@ function Sidebar() {
             <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>Dhruv Patel</Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>dhp4604@gmail.com</Typography>
           </Box>
-          <LogoutIcon sx={{ color: 'text.secondary', cursor: 'pointer' }} />
+          <Box onClick={handleLogout} sx={{ cursor: 'pointer' }}>
+            <LogoutIcon sx={{ color: 'text.secondary' }} />
+          </Box>
         </Box>
       </Box>
     </Drawer>

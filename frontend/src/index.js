@@ -9,8 +9,8 @@ import SignUpPage from './SignUpPage'
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    {/* <App /> */}
-    <SignUpPage></SignUpPage>
+    <App />
+    {/* <SignUpPage></SignUpPage> */}
   </React.StrictMode>
 );
 
