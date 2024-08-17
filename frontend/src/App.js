@@ -6,6 +6,7 @@ import Sidebar from './Components/SideBar';
 import MainContent from './MainContent';
 import './fonts.css';
 
+
 const theme = createTheme({
   typography: {
     fontFamily: [

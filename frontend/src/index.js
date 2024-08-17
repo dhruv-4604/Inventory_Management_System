@@ -4,12 +4,13 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import SignInPage from './SignInPage'
+import SignUpPage from './SignUpPage'
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     {/* <App /> */}
-    <SignInPage></SignInPage>
+    <SignUpPage></SignUpPage>
   </React.StrictMode>
 );
 

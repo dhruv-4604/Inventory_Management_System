@@ -13,13 +13,15 @@ import {
 import { styled } from '@mui/material/styles';
 import EmailIcon from '@mui/icons-material/Email';
 import LockIcon from '@mui/icons-material/Lock';
+import BusinessIcon from '@mui/icons-material/Business';
+import PhoneIcon from '@mui/icons-material/Phone';
 import googleIcon from './google_icon.png';
 import illustration from './Illustration_Image.png';
 import mainLogo from './Components/logo.png';
 
 import './fonts.css';
 
-// Styled components
+// Styled components (reused from SignInPage)
 const StyledTextField = styled(TextField)(({ theme }) => ({
   '& .MuiOutlinedInput-root': {
     borderRadius: '8px',
@@ -62,7 +64,7 @@ const GradientBorderButton = styled(Button)(({ theme }) => ({
   },
 }));
 
-const SignInPage = () => {
+const SignUpPage = () => {
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
 
@@ -89,10 +91,10 @@ const SignInPage = () => {
       <Grid container sx={{ flexGrow: 1 }}>
         <Grid item xs={12} md={6} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', pl: { xs: 2, md: 8 } }}>
           <Typography variant="h4" component="h1" sx={{ mb: 1, fontFamily: 'ClashGrotesk-semibold, Arial, sans-serif' }}>
-            Welcome Back!
+            Let's get you started
           </Typography>
           <Typography variant="subtitle1" sx={{ mb: 4, color: 'text.secondary', fontFamily: 'ClashGrotesk-Medium, Arial, sans-serif', fontWeight: 400 }}>
-            Sign-In to continue.
+            Enter the details to get going
           </Typography>
           <Box component="form" noValidate sx={{ width: '100%', maxWidth: 400 }}>
             <StyledTextField 
@@ -110,21 +112,37 @@ const SignInPage = () => {
             <StyledTextField
               fullWidth
               type="password"
-              placeholder="Enter Password"
+              placeholder="Create Password"
               InputProps={{
                 startAdornment: <LockIcon sx={{ color: 'action.active', mr: 1 }} />,
               }}
               sx={{ mb: 2 }}
             />
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <FormControlLabel
-                control={<Checkbox sx={{ color: '#97C949', '&.Mui-checked': { color: '#97C949' } }} />}
-                label={<Typography sx={{ fontFamily: 'ClashGrotesk-Medium, Arial, sans-serif' }}>Remember me?</Typography>}
-              />
-              <Link href="#" sx={{ color: '#97C949', textDecoration: 'none', fontFamily: 'ClashGrotesk-Medium' }}>
-                Forget Password?
-              </Link>
-            </Box>
+            <StyledTextField
+              fullWidth
+              placeholder="Enter Company Name"
+              InputProps={{
+                startAdornment: <BusinessIcon sx={{ color: 'action.active', mr: 1 }} />,
+              }}
+              sx={{ mb: 2 }}
+            />
+            <StyledTextField
+              fullWidth
+              placeholder="Enter Company Phone"
+              InputProps={{
+                startAdornment: <PhoneIcon sx={{ color: 'action.active', mr: 1 }} />,
+              }}
+              sx={{ mb: 2 }}
+            />
+            <FormControlLabel
+              control={<Checkbox sx={{ color: '#97C949', '&.Mui-checked': { color: '#97C949' } }} />}
+              label={
+                <Typography sx={{ fontFamily: 'ClashGrotesk-Medium, Arial, sans-serif', fontSize: '0.875rem' }}>
+                  I agree to the <Link href="#" sx={{ color: '#97C949' }}>Terms of Service</Link> and <Link href="#" sx={{ color: '#97C949' }}>Privacy Policy</Link>
+                </Typography>
+              }
+              sx={{ mb: 2 }}
+            />
             <StyledButton
               fullWidth
               variant="contained"
@@ -134,21 +152,22 @@ const SignInPage = () => {
                 color: '#232619',
               }}
             >
-              Login
+              Create Account
             </StyledButton>
             <GradientBorderButton
               fullWidth
               variant="outlined"
               startIcon={<img src={googleIcon} alt="Google" width="18" height="18" />}
               sx={{ 
-                mb: 2, height:'45px',
-                color: '#94C848', fontSize:'17px'
+                mb: 2, 
+                height:'45px',
+                color: '#94C848', textTransform:'none',fontFamily: 'ClashGrotesk-semibold', fontSize:'17px' 
               }}
             >
-              Login with Google
+              Signup using Google
             </GradientBorderButton>
             <Typography variant="body2" align="center" sx={{ fontFamily: 'ClashGrotesk-Medium' }}>
-              Don't have an account? <Link href="#" sx={{ color: '#97C949', textDecoration: 'none' }}>Create account</Link>
+              Already have an account? <Link href="#" sx={{ color: '#97C949', textDecoration: 'none' }}>Sign In</Link>
             </Typography>
           </Box>
         </Grid>
@@ -160,4 +179,4 @@ const SignInPage = () => {
   );
 };
 
-export default SignInPage;
+export default SignUpPage;
