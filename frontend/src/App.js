@@ -1,32 +1,84 @@
+// App.js
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import './fonts.css';
+import { BrowserRouter as Router, Routes, Route,useLocation  } from 'react-router-dom';
+import { Box, CssBaseline } from '@mui/material';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import TopBar from './Components/TopBar';
+import Sidebar from './Components/SideBar';
+import Dashboard from './Dashboard';
+import ItemPage from './ItemPage';
 import SignInPage from './SignInPage';
 import SignUpPage from './SignUpPage';
-import Main from './Main';
-import Dashboard from './Dashboard';
-import Item from './Item';
+import './fonts.css';
+
+const theme = createTheme({
+  typography: {
+    fontFamily: [
+      'ClashGrotesk-Medium',
+      '-apple-system',
+      'BlinkMacSystemFont',
+      '"Segoe UI"',
+      'Arial',
+      'sans-serif',
+    ].join(','),
+    h6: {
+      fontWeight: 600,
+    },
+    button: {
+      textTransform: 'none',
+    },
+  },
+});
+
+const DRAWER_WIDTH = 260;
+
+function MainContent() {
+  const location = useLocation();
+
+  const getTitle = () => {
+    if (location.pathname.includes('/inventory/items')) return 'Items';
+    if (location.pathname.includes('/dashboard')) return 'Dashboard';
+    // Add more conditions for other routes
+    return 'SupplySync';
+  };
+
+  return (
+    <>
+      <TopBar title={getTitle()} />
+      <Sidebar />
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` },
+          mt: '64px', // Adjust this value based on your TopBar height
+        }}
+      >
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/inventory/items" element={<ItemPage />} />
+          {/* Add more routes as needed */}
+        </Routes>
+      </Box>
+    </>
+  );
+}
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        {/* Public routes */}
-        <Route path="/signin" element={<SignInPage />} />
-        <Route path="/signup" element={<SignUpPage />} />
-
-        {/* Protected routes */}
-        <Route path="/" element={<Main />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="inventory" element={<Item />} />
-          {/* Add more routes here as needed */}
-        </Route>
-
-        {/* Catch-all route for 404 */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </Router>
+    <ThemeProvider theme={theme}>
+      <Router>
+        <Box sx={{ display: 'flex' }}>
+          <CssBaseline />
+          <Routes>
+            <Route path="/signin" element={<SignInPage />} />
+            <Route path="/signup" element={<SignUpPage />} />
+            <Route path="*" element={<MainContent />} />
+          </Routes>
+        </Box>
+      </Router>
+    </ThemeProvider>
   );
 }
 

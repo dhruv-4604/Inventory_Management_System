@@ -1,7 +1,17 @@
+// Sidebar.js
 import React, { useState } from 'react';
 import { 
-  Drawer, List, ListItem, ListItemIcon, ListItemText, 
-  Box, Collapse, TextField, InputAdornment, Avatar, Typography,
+  Drawer, 
+  List, 
+  ListItem, 
+  ListItemIcon, 
+  ListItemText, 
+  Box, 
+  Collapse, 
+  TextField, 
+  InputAdornment, 
+  Avatar, 
+  Typography,
   Button
 } from '@mui/material';
 import { 
@@ -14,7 +24,7 @@ import DashboardIcon from '@mui/icons-material/Apps';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import SalesIcon from '@mui/icons-material/AttachMoney';
 import OrdersIcon from '@mui/icons-material/ShoppingCart';
-import mainlogo from './logo.png';
+import mainLogo from './logo.png';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const DRAWER_WIDTH = 260;
@@ -87,11 +97,17 @@ function Sidebar() {
       isExpandable: true,
       to: '/inventory',
       subItems: [
-        { text: 'Items', to: '/inventory/items' },
-        { text: 'Categories', to: '/inventory/categories' }
+        { text: 'Manage Items', to: '/inventory/items' },
+        { text: 'Categories', to: '/inventory/categories' },
+        { text: 'Price List', to: '/inventory/price_list' }
       ]
     },
-    { icon: <SalesIcon />, text: 'Sales', to: '/sales' },
+    { icon: <SalesIcon />, text: 'Sales', to: '/sales', isExpandable: true,
+      subItems: [
+        { text: 'Customers', to: '/inventory/items' },
+        { text: 'Sale Orders', to: '/inventory/categories' },
+        { text: 'Shipments', to: '/inventory/price_list' }
+      ]},
     { icon: <OrdersIcon />, text: 'Orders', to: '/orders' },
   ];
 
@@ -132,7 +148,7 @@ function Sidebar() {
       anchor="left"
     >
       <Box sx={{ p: 3, pb:4 }}>
-        <img src={mainlogo} alt="Logo" style={{ height: '32px', width: '100%', objectFit: 'contain' }} />
+        <img src={mainLogo} alt="Logo" style={{ height: '32px', width: '100%', objectFit: 'contain' }} />
       </Box>
 
       <Box sx={{ px: 2, mb: 2 }}>
