@@ -38,7 +38,7 @@ function TopBar({ title }) {
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <IconButton color="inherit" sx={{ mr: 2 }}>
-            <NotificationsIcon />
+            <NotificationsIcon color='#232619'/>
           </IconButton>
           <Button
             variant="contained"
@@ -46,11 +46,13 @@ function TopBar({ title }) {
             sx={{ 
               background: 'linear-gradient(90deg, #D1EA67 , #A6F15A )',
               color: '#232619',
+              boxShadow:'none',
               '&:hover': {
                 background: 'linear-gradient(90deg, #C1DA57 , #96E14A )',
+                boxShadow:'none'
               },
               textTransform: 'none',
-              fontWeight: 'bold',
+              fontWeight: 'semibold',
             }}
           >
             Add Shipment

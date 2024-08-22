@@ -35,6 +35,7 @@ function Main() {
     const path = location.pathname;
     if (path.includes('/dashboard')) return 'Dashboard';
     if (path.includes('/inventory')) return 'Inventory';
+    if (path.includes('/sales')) return 'Sales';
     // Add more conditions for other routes as needed
     return 'SupplySync'; // Default title
   };

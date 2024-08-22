@@ -1,62 +1,59 @@
 // Sidebar.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  Drawer, 
-  List, 
-  ListItem, 
-  ListItemIcon, 
-  ListItemText, 
-  Box, 
-  Collapse, 
-  TextField, 
-  InputAdornment, 
-  Avatar, 
-  Typography,
-  Button
+  Drawer, List, ListItem, ListItemIcon, ListItemText, Box, Collapse, 
+  TextField, InputAdornment, Avatar, Typography
 } from '@mui/material';
 import { 
-  ExpandLess, 
-  ExpandMore,
-  Search as SearchIcon,
-  Logout as LogoutIcon
+  ExpandLess, ExpandMore, Search as SearchIcon, Logout as LogoutIcon
 } from '@mui/icons-material';
 import DashboardIcon from '@mui/icons-material/Apps';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import SalesIcon from '@mui/icons-material/AttachMoney';
-import OrdersIcon from '@mui/icons-material/ShoppingCart';
+import StoreIcon from '@mui/icons-material/Store';
+import SettingsIcon from '@mui/icons-material/Settings';
 import mainLogo from './logo.png';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const DRAWER_WIDTH = 260;
 
-const SidebarItem = ({ icon, text, to, onClick, isExpandable, isExpanded, isSelected }) => (
+// Component for individual sidebar items
+const SidebarItem = ({ icon, text, to, onClick, isExpandable, isExpanded, isSelected, isChildSelected }) => (
   <ListItem 
     button 
     component={Link}
     to={to}
     onClick={onClick}
     sx={{
-      background: isSelected ? 'linear-gradient(90deg, #D1EA67 , #A6F15A )' : 'transparent',
-      color: isSelected ? '#000' : 'inherit',
+      background: (isSelected || isChildSelected)
+        ? 'linear-gradient(90deg, #D1EA67 , #A6F15A )'
+        : 'transparent',
+      color: (isSelected || isChildSelected) ? '#000' : 'inherit',
       '&:hover': {
-        backgroundColor: isSelected ? '#9AE6B4' : 'rgba(0, 0, 0, 0.04)',
+        backgroundColor: (isSelected || isChildSelected) 
+          ? 'linear-gradient(90deg, #D1EA67 , #A6F15A )'
+          : 'rgba(0, 0, 0, 0.04)',
       },
       borderRadius: '5px',
       margin: '4px 0',
       padding: '8px 16px',
+      fontWeight: (isSelected || isChildSelected) ? 'bold' : 'normal',
     }}
   >
-    <ListItemIcon sx={{ minWidth: '40px', color: isSelected ? '#000' : 'inherit' }}>{icon}</ListItemIcon>
+    <ListItemIcon sx={{ minWidth: '40px', color: (isSelected || isChildSelected) ? '#000' : 'inherit' }}>
+      {icon}
+    </ListItemIcon>
     <ListItemText primary={text} />
     {isExpandable && (isExpanded ? <ExpandLess /> : <ExpandMore />)}
   </ListItem>
 );
 
-const ExpandableSidebarItem = ({ items, isExpanded }) => (
+// Component for expandable sidebar items (sub-menu)
+const ExpandableSidebarItem = ({ items, isExpanded, parentTo, selectedChildTo }) => (
   <Collapse in={isExpanded} timeout="auto" unmountOnExit>
     <List component="div" disablePadding>
       <Box sx={{ 
-        borderLeft: '1px solid #e0e0e0', 
+        borderLeft: '1.6px solid #e0e0e0', 
         ml: 3.4, 
         pl: 2
       }}>
@@ -64,11 +61,12 @@ const ExpandableSidebarItem = ({ items, isExpanded }) => (
           <ListItem 
             button 
             component={Link}
-            to={item.to}
+            to={`${parentTo}/${item.to}`}
             key={index} 
             sx={{ 
+              backgroundColor: selectedChildTo === item.to ? 'rgba(0, 0, 0, 0.14)' : 'transparent',
               '&:hover': {
-                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                backgroundColor: selectedChildTo === item.to ? '#F0F0F0' : 'rgba(0, 0, 0, 0.04)',
               },
               borderRadius: '8px',
               margin: '4px 0',
@@ -84,11 +82,12 @@ const ExpandableSidebarItem = ({ items, isExpanded }) => (
 );
 
 function Sidebar() {
-  const [expandedItem, setExpandedItem] = useState('Inventory');
+  const [expandedItem, setExpandedItem] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Define sidebar items
   const sidebarItems = [
     { icon: <DashboardIcon />, text: 'Dashboard', to: '/dashboard' },
     { 
@@ -97,37 +96,64 @@ function Sidebar() {
       isExpandable: true,
       to: '/inventory',
       subItems: [
-        { text: 'Manage Items', to: '/inventory/items' },
-        { text: 'Categories', to: '/inventory/categories' },
-        { text: 'Price List', to: '/inventory/price_list' }
+        { text: 'Items', to: 'items' },
+        { text: 'Categories', to: 'categories' },
+        { text: 'Price List', to: 'Price_List' }
       ]
     },
-    { icon: <SalesIcon />, text: 'Sales', to: '/sales', isExpandable: true,
-      subItems: [
-        { text: 'Customers', to: '/inventory/items' },
-        { text: 'Sale Orders', to: '/inventory/categories' },
-        { text: 'Shipments', to: '/inventory/price_list' }
-      ]},
-    { icon: <OrdersIcon />, text: 'Orders', to: '/orders' },
+    { icon: <SalesIcon />, text: 'Sales', isExpandable: true, to: '/sales', subItems: [
+      { text: 'Customers', to: 'customerpage' },
+      { text: 'Sale Orders', to: 'sale_orders' },
+      { text: 'Shipments', to: 'Shipments' }
+    ]},
+    { icon: <StoreIcon />, text: 'Purchases', isExpandable: true, to: '/Purchases',subItems: [
+      { text: 'Purchase Orders', to: 'Purchase_Orders' },
+      { text: 'Shipments', to: 'Shipments' },
+      { text: 'Reports', to: 'Reports' }
+    ] },
+    { icon: <SettingsIcon />, text: 'Settings', to: '/Settings' },
   ];
 
+  // Effect to expand the correct item based on the current route
+  useEffect(() => {
+    const currentPath = location.pathname;
+    const expandableItem = sidebarItems.find(item => 
+      item.isExpandable && item.subItems.some(subItem => currentPath.includes(`${item.to}/${subItem.to}`))
+    );
+    if (expandableItem) {
+      setExpandedItem(expandableItem.text);
+    }
+  }, [location.pathname]);
+
+  // Handle click on sidebar item
   const handleItemClick = (itemText) => {
-    if (itemText === expandedItem) {
-      setExpandedItem(null);
-    } else if (sidebarItems.find(item => item.text === itemText)?.isExpandable) {
-      setExpandedItem(itemText);
+    const item = sidebarItems.find(item => item.text === itemText);
+    if (item && item.isExpandable) {
+      setExpandedItem(expandedItem === itemText ? null : itemText);
     } else {
       setExpandedItem(null);
     }
   };
 
+  // Handle search input change
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
   };
 
+  // Handle logout
   const handleLogout = () => {
-    // Implement logout logic here
     navigate('/signin');
+  };
+
+  // Get the selected child item
+  const getSelectedChildTo = (item) => {
+    if (item.isExpandable) {
+      const selectedSubItem = item.subItems.find(subItem => 
+        location.pathname.includes(`${item.to}/${subItem.to}`)
+      );
+      return selectedSubItem ? selectedSubItem.to : null;
+    }
+    return null;
   };
 
   return (
@@ -138,19 +164,23 @@ function Sidebar() {
         '& .MuiDrawer-paper': {
           width: DRAWER_WIDTH,
           boxSizing: 'border-box',
-          borderRight: 'solid 1.5px #E6E4E4',
+          borderRight: 'solid 1px #E6E4E4',
           overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
+          bgcolor: '#FFFFF',
+
         },
       }}
       variant="permanent"
       anchor="left"
     >
-      <Box sx={{ p: 3, pb:4 }}>
+      {/* Logo */}
+      <Box sx={{ p: 3, pb: 4 }}>
         <img src={mainLogo} alt="Logo" style={{ height: '32px', width: '100%', objectFit: 'contain' }} />
       </Box>
 
+      {/* Search bar */}
       <Box sx={{ px: 2, mb: 2 }}>
         <TextField
           fullWidth
@@ -166,7 +196,7 @@ function Sidebar() {
               </InputAdornment>
             ),
             sx: {
-              borderRadius: '20px',
+              borderRadius: '8px',
               backgroundColor: '#f5f5f5',
               '& fieldset': { border: 'none' },
             }
@@ -174,6 +204,7 @@ function Sidebar() {
         />
       </Box>
 
+      {/* Sidebar menu items */}
       <List sx={{ flexGrow: 1, px: 2 }}>
         {sidebarItems.map((item, index) => (
           <React.Fragment key={index}>
@@ -184,37 +215,45 @@ function Sidebar() {
               onClick={() => handleItemClick(item.text)}
               isExpandable={item.isExpandable}
               isExpanded={expandedItem === item.text}
-              isSelected={location.pathname === item.to || location.pathname.startsWith(`${item.to}/`)}
+              isSelected={location.pathname === item.to}
+              isChildSelected={item.isExpandable && item.subItems.some(subItem => 
+                location.pathname.includes(`${item.to}/${subItem.to}`))}
             />
             {item.isExpandable && (
               <ExpandableSidebarItem 
                 items={item.subItems} 
                 isExpanded={expandedItem === item.text}
+                parentTo={item.to}
+                selectedChildTo={getSelectedChildTo(item)}
               />
             )}
           </React.Fragment>
         ))}
       </List>
 
+      {/* User profile and logout */}
       <Box sx={{ 
         mt: 'auto', 
-        p: 2, 
-        borderTop: '1px solid #E6E4E4',
+        p: 2,
+       
       }}>
         <Box sx={{ 
+         
           display: 'flex', 
           alignItems: 'center', 
-          backgroundColor: '#f5f5f5',
+          backgroundColor: '#FFFFF',
           borderRadius: '8px',
           padding: '8px 16px',
+          paddingRight:'12px',
+          border: '1.4px solid #AEAEAE',
         }}>
           <Avatar src="/path-to-profile-image.jpg" alt="Dhruv Patel" sx={{ width: 40, height: 40, mr: 2 }} />
           <Box sx={{ flexGrow: 1 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>Dhruv Patel</Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>dhp4604@gmail.com</Typography>
+            <Typography pb="-2px" variant="subtitle2" sx={{ fontWeight: 'semibold', fontSize:"17px" }}>Dhruv Patel</Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize:"11px"}}>dhp4604@gmail.com</Typography>
           </Box>
-          <Box onClick={handleLogout} sx={{ cursor: 'pointer' }}>
-            <LogoutIcon sx={{ color: 'text.secondary' }} />
+          <Box   ml='10px' mt="7px" onClick={handleLogout} sx={{ cursor: 'pointer' }}>
+            <LogoutIcon  sx={{ color: 'text.secondary' }} />
           </Box>
         </Box>
       </Box>
