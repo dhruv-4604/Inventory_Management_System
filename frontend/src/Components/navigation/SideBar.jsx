@@ -12,7 +12,7 @@ import InventoryIcon from '@mui/icons-material/Inventory';
 import SalesIcon from '@mui/icons-material/AttachMoney';
 import StoreIcon from '@mui/icons-material/Store';
 import SettingsIcon from '@mui/icons-material/Settings';
-import mainLogo from './logo.png';
+import mainLogo from '../../assets/logo.png';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const DRAWER_WIDTH = 260;

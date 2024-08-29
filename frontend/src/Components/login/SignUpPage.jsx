@@ -14,11 +14,11 @@ import EmailIcon from '@mui/icons-material/Email';
 import LockIcon from '@mui/icons-material/Lock';
 import BusinessIcon from '@mui/icons-material/Business';
 import PhoneIcon from '@mui/icons-material/Phone';
-import googleIcon from './google_icon.png';
-import illustration from './Illustration_Image.png';
-import mainLogo from './Components/logo.png';
+import googleIcon from '../../assets/google_icon.png';
+import illustration from '../../assets/Illustration_Image.png';
+import mainLogo from '../../assets/logo.png';
 import { Link } from 'react-router-dom';
-import './fonts.css';
+import '../../fonts.css';
 
 // Styled components (reused from SignInPage)
 const StyledTextField = styled(TextField)(({ theme }) => ({
