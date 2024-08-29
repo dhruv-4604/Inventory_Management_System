@@ -15,6 +15,9 @@ import CustomerPage from './CustomerPage.jsx';
 import SalesOrderPage from './Components/SaleOrdersPage.jsx';
 import ShipmentsPage from './Components/ShipmentsPage.jsx';
 import CategoriesPage from './Components/CategoriesPage.jsx';
+import PriceListPage from './Components/PriceList.jsx';
+import PurchaseOrdersPage from './Components/PurchaseOrdersPage.jsx';
+import VendorsPage from './Components/VendorsPage.jsx';
 
 const theme = createTheme({
   typography: {
@@ -71,9 +74,13 @@ function MainContent() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/inventory/items" element={<ItemPage />} />
           <Route path="/inventory/categories" element={<CategoriesPage />} />
+          <Route path="/inventory/price_list" element={<PriceListPage />} />
           <Route path="/sales/customerpage" element={<CustomerPage />} />
           <Route path="/sales/sale_orders" element={<SalesOrderPage />} />
           <Route path="/sales/shipments" element={<ShipmentsPage />} />
+          <Route path="purchases/purchase_orders" element={<PurchaseOrdersPage/>}/>
+          <Route path="purchases/vendors" element={<VendorsPage/>}/>
+
           
   
         </Routes>

@@ -98,7 +98,7 @@ function Sidebar() {
       subItems: [
         { text: 'Items', to: 'items' },
         { text: 'Categories', to: 'categories' },
-        { text: 'Price List', to: 'Price_List' }
+        { text: 'Price List', to: 'price_list' }
       ]
     },
     { icon: <SalesIcon />, text: 'Sales', isExpandable: true, to: '/sales', subItems: [
@@ -107,9 +107,8 @@ function Sidebar() {
       { text: 'Shipments', to: 'Shipments' }
     ]},
     { icon: <StoreIcon />, text: 'Purchases', isExpandable: true, to: '/Purchases',subItems: [
-      { text: 'Purchase Orders', to: 'Purchase_Orders' },
-      { text: 'Shipments', to: 'Shipments' },
-      { text: 'Reports', to: 'Reports' }
+      { text: 'Vendors', to: 'vendors' },
+      { text: 'Purchase Orders', to: 'Purchase_Orders' }
     ] },
     { icon: <SettingsIcon />, text: 'Settings', to: '/Settings' },
   ];
