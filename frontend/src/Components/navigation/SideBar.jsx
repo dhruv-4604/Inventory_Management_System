@@ -14,6 +14,7 @@ import StoreIcon from '@mui/icons-material/Store';
 import SettingsIcon from '@mui/icons-material/Settings';
 import mainLogo from '../../assets/logo.png';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import api from '../../api';
 
 const DRAWER_WIDTH = 260;
 
@@ -82,6 +83,32 @@ const ExpandableSidebarItem = ({ items, isExpanded, parentTo, selectedChildTo })
 );
 
 function Sidebar() {
+
+  const [name,setName]=useState("")
+  const [email,setEmail]=useState("")
+
+  useEffect( () => { async function fetchData(){
+    try {
+      const res = await api.get('/token/user/')
+ 
+        setName(res.data.company_name)
+        setEmail(res.data.email)
+        console.log(res.data)
+       
+      
+  } catch (error) {
+      alert(error)
+  }
+}fetchData()
+}, []);
+
+
+  
+
+   
+
+
+  
   const [expandedItem, setExpandedItem] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const location = useLocation();
@@ -141,6 +168,7 @@ function Sidebar() {
 
   // Handle logout
   const handleLogout = () => {
+    localStorage.clear()
     navigate('/signin');
   };
 
@@ -248,8 +276,8 @@ function Sidebar() {
         }}>
           <Avatar src="/path-to-profile-image.jpg" alt="Dhruv Patel" sx={{ width: 40, height: 40, mr: 2 }} />
           <Box sx={{ flexGrow: 1 }}>
-            <Typography pb="-2px" variant="subtitle2" sx={{ fontWeight: 'semibold', fontSize:"17px" }}>Dhruv Patel</Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize:"11px"}}>dhp4604@gmail.com</Typography>
+            <Typography pb="-2px" variant="subtitle2" sx={{ fontWeight: 'semibold', fontSize:"17px" }}>{name}</Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize:"11px"}}>{email}</Typography>
           </Box>
           <Box   ml='10px' mt="7px" onClick={handleLogout} sx={{ cursor: 'pointer' }}>
             <LogoutIcon  sx={{ color: 'text.secondary' }} />

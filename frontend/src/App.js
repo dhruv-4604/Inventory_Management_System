@@ -65,7 +65,7 @@ function MainContent() {
   };
 
   return (
-    <>
+    <ProtectedRoute>
       <TopBar title={getTitle()} />
       <Sidebar />
       <Box
@@ -78,7 +78,7 @@ function MainContent() {
       >
         <Routes>
          
-          <Route path="/dashboard" element={ <ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/dashboard" element={ <Dashboard />} />
           
           <Route path="/inventory/items" element={<ItemPage />} />
           <Route path="/inventory/categories" element={<CategoriesPage />} />
@@ -93,7 +93,8 @@ function MainContent() {
           <Route path="purchases/vendors" element={<VendorsPage />} />
         </Routes>
       </Box>
-    </>
+
+    </ProtectedRoute>
   );
 }
 
