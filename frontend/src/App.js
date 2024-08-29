@@ -4,7 +4,7 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  useLocation,
+  useLocation,Navigate
 } from "react-router-dom";
 import { Box, CssBaseline } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
@@ -23,6 +23,7 @@ import CategoriesPage from "./Components/inventory/CategoriesPage.jsx";
 import PriceListPage from "./Components/inventory/PriceList.jsx";
 import PurchaseOrdersPage from "./Components/purchase/PurchaseOrdersPage.jsx";
 import VendorsPage from "./Components/purchase/VendorsPage.jsx";
+import ProtectedRoute from "./ProtectedRoute.jsx";
 
 const theme = createTheme({
   typography: {
@@ -76,8 +77,9 @@ function MainContent() {
         }}
       >
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+         
+          <Route path="/dashboard" element={ <ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          
           <Route path="/inventory/items" element={<ItemPage />} />
           <Route path="/inventory/categories" element={<CategoriesPage />} />
           <Route path="/inventory/price_list" element={<PriceListPage />} />
@@ -95,6 +97,12 @@ function MainContent() {
   );
 }
 
+
+function Logout() {
+  localStorage.clear()
+  return <Navigate to="/signin" />
+}
+
 function App() {
   return (
     <ThemeProvider theme={theme}>
@@ -102,6 +110,8 @@ function App() {
         <Box sx={{ display: "flex" }}>
           <CssBaseline />
           <Routes>
+          <Route path="/logout" element={<Logout />} />
+          <Route path="/" element={<SignInPage />} />
             <Route path="/signin" element={<SignInPage />} />
             <Route path="/signup" element={<SignUpPage />} />
             <Route path="*" element={<MainContent />} />

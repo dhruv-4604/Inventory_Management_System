@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import api from '../../api'
+import { useNavigate } from "react-router-dom";
+
 import { 
   Box, 
   TextField, 
@@ -65,7 +68,10 @@ const GradientBorderButton = styled(Button)(({ theme }) => ({
 
 const SignUpPage = () => {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const validateEmail = (email) => {
     const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -82,6 +88,22 @@ const SignUpPage = () => {
     }
   };
 
+  const handleSubmit = async (e) => {
+    console.log('loll')
+    setLoading(true);
+    e.preventDefault();
+
+    try {
+        const res = await api.post('/register/', { email:email,password:password,company_name:'1214',phone_number:'12223' })
+       navigate("/signin")
+        
+    } catch (error) {
+        alert(error)
+    } finally {
+        setLoading(false)
+    }
+};
+
   return (
     <Container maxWidth="xl" sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ p: 2 }}>
@@ -95,7 +117,8 @@ const SignUpPage = () => {
           <Typography variant="subtitle1" sx={{ mb: 4, color: 'text.secondary', fontFamily: 'ClashGrotesk-Medium, Arial, sans-serif', fontWeight: 400 }}>
             Enter the details to get going
           </Typography>
-          <Box component="form" noValidate sx={{ width: '100%', maxWidth: 400 }}>
+          
+          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ width: '100%', maxWidth: 400 }}>
             <StyledTextField 
               fullWidth
               placeholder="Enter Email Id"
@@ -111,6 +134,7 @@ const SignUpPage = () => {
             <StyledTextField
               fullWidth
               type="password"
+              onChange={(e)=>setPassword(e.target.value)}
               placeholder="Create Password"
               InputProps={{
                 startAdornment: <LockIcon sx={{ color: 'action.active', mr: 1 }} />,
@@ -145,8 +169,8 @@ const SignUpPage = () => {
             <StyledButton
               fullWidth
               variant="contained"
-              component={Link}
-              to='/home'
+              type="submit"
+            
               sx={{ 
                 mb: 2, 
                 background: 'linear-gradient(90deg, #D1EA67 , #A6F15A )',
@@ -155,6 +179,7 @@ const SignUpPage = () => {
             >
               Create Account
             </StyledButton>
+            </Box>
             <GradientBorderButton
               fullWidth
               variant="outlined"
@@ -172,7 +197,7 @@ const SignUpPage = () => {
             <Typography variant="body2" align="center" sx={{ fontFamily: 'ClashGrotesk-Medium' }}>
               Already have an account? <Link to="/" sx={{ color: '#97C949', textDecoration: 'none' }}>Sign In</Link>
             </Typography>
-          </Box>
+          
         </Grid>
         <Grid item xs={12} md={6} sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', justifyContent: 'center' }}>
           <img src={illustration} alt="Supply Chain Illustration" style={{ maxWidth: '100%', height: 'auto' }} />

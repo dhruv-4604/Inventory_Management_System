@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import api from '../../api'
+import { useNavigate } from "react-router-dom";
+import { ACCESS_TOKEN, REFRESH_TOKEN } from "../../constants";
 import { 
   Box, 
   TextField, 
@@ -64,6 +67,9 @@ const GradientBorderButton = styled(Button)(({ theme }) => ({
 const SignInPage = () => {
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+ const navigate = useNavigate();
 
   const validateEmail = (email) => {
     const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -80,6 +86,25 @@ const SignInPage = () => {
     }
   };
 
+
+  const handleSubmit = async (e) => {
+    setLoading(true);
+    e.preventDefault();
+
+    try {
+        const res = await api.post('/token/', { email:email,password:password })
+   
+          localStorage.setItem(ACCESS_TOKEN, res.data.access);
+          localStorage.setItem(REFRESH_TOKEN, res.data.refresh);
+          navigate("/dashboard")
+        
+    } catch (error) {
+        alert(error)
+    } finally {
+        setLoading(false)
+    }
+};
+
   return (
     <Container maxWidth="xl" sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ p: 2 }}>
@@ -93,7 +118,7 @@ const SignInPage = () => {
           <Typography variant="subtitle1" sx={{ mb: 4, color: 'text.secondary', fontFamily: 'ClashGrotesk-Medium, Arial, sans-serif', fontWeight: 400 }}>
             Sign-In to continue.
           </Typography>
-          <Box component="form" noValidate sx={{ width: '100%', maxWidth: 400 }}>
+          <Box component="form" onSubmit={handleSubmit}noValidate sx={{ width: '100%', maxWidth: 400 }}>
             <StyledTextField 
               fullWidth
               placeholder="Enter Email Id"
@@ -108,6 +133,7 @@ const SignInPage = () => {
             />
             <StyledTextField
               fullWidth
+              onChange={(e)=>setPassword(e.target.value)}
               type="password"
               placeholder="Enter Password"
               InputProps={{
@@ -127,8 +153,7 @@ const SignInPage = () => {
             <StyledButton
               fullWidth
               variant="contained" 
-              component={Link}
-              to='/home'
+              type='submit'
               sx={{ 
                 mb: 2, 
                 background: 'linear-gradient(90deg, #D1EA67 , #A6F15A )',

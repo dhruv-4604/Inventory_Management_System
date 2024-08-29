@@ -1,14 +1,22 @@
 from rest_framework import serializers
-from .models import CustomUser
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractBaseUser
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-class RegisterSerializer(serializers.ModelSerializer):
+User = get_user_model()
+
+class CustomUserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
     class Meta:
-        model = CustomUser
-        fields = ('email', 'password', 'company_name', 'phone_number')
-        extra_kwargs = {'password': {'write_only': True}}
+        model = User
+        fields = ['email', 'password', 'company_name', 'phone_number']
+        extra_kwargs = {
+            'password': {'write_only': True},
+        }
 
     def create(self, validated_data):
-        user = CustomUser.objects.create_user(
+        user = User.objects.create_user(
             email=validated_data['email'],
             password=validated_data['password'],
             company_name=validated_data['company_name'],
@@ -16,15 +24,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
         return user
 
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-
-        # Add custom claims
+        token['email'] = user.email
         token['company_name'] = user.company_name
-        token['phone_number'] = user.phone_number
-
         return token
