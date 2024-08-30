@@ -38,3 +38,37 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 class CustomTokenRefreshView(TokenRefreshView):
     # If you need custom behavior for token refresh, override methods here
     pass
+
+
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
+from .models import Item
+from .serializers import ItemSerializer
+
+class ItemListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        items = Item.objects.filter(user=request.user)
+        serializer = ItemSerializer(items, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        item_id = request.data.get('item_id')
+        request.data['user'] = request.user.id
+
+        if item_id:
+            # Update existing item
+            item = get_object_or_404(Item, item_id=item_id, user=request.user)
+            serializer = ItemSerializer(item, data=request.data, partial=True)
+        else:
+            # Create new item
+            serializer = ItemSerializer(data=request.data)
+
+        if serializer.is_valid():
+            item = serializer.save()
+            return Response(ItemSerializer(item).data, status=status.HTTP_200_OK if item_id else status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

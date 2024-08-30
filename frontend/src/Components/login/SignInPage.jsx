@@ -119,7 +119,7 @@ const SignInPage = () => {
             Sign-In to continue.
           </Typography>
           <Box component="form" onSubmit={handleSubmit}noValidate sx={{ width: '100%', maxWidth: 400 }}>
-            <StyledTextField 
+            <StyledTextField  required
               fullWidth
               placeholder="Enter Email Id"
               value={email}
@@ -131,7 +131,7 @@ const SignInPage = () => {
               }}
               sx={{ mb: 2 }}
             />
-            <StyledTextField
+            <StyledTextField 
               fullWidth
               onChange={(e)=>setPassword(e.target.value)}
               type="password"

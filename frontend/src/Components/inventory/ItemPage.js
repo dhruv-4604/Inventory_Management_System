@@ -1,4 +1,3 @@
-// ItemPage.js
 import React, { useState, useMemo } from "react";
 import {
   Box,
@@ -14,15 +13,25 @@ import {
   Checkbox,
   InputAdornment,
 } from "@mui/material";
+import { styled } from "@mui/system";
 import AddIcon from "@mui/icons-material/Add";
 import SortIcon from "@mui/icons-material/Sort";
 import SearchIcon from "@mui/icons-material/Search";
 import ItemDetailView from "./ItemDetailView";
 import NewItemModal from "./NewItemModal";
 
+// Custom styled component for square images
+const SquareImage = styled('img')({
+  width: '50px',
+  height: '50px',
+  objectFit: 'cover',
+  borderRadius: '4px',
+});
+
 const initialItemsData = [
   {
     id: 1,
+    image: "https://picsum.photos/200",
     name: "Sofa",
     sku: "Item 1 sku",
     type: "Goods",
@@ -37,6 +46,15 @@ const initialItemsData = [
     salesAccount: "Advertising And Marketing",
   },
   // Add more items as needed
+];
+
+const columnMap = [
+  { key: "image", label: "IMAGE" },
+  { key: "name", label: "NAME" },
+  { key: "sku", label: "SKU" },
+  { key: "type", label: "TYPE" },
+  { key: "description", label: "DESCRIPTION" },
+  { key: "rate", label: "RATE" },
 ];
 
 function ItemPage() {
@@ -66,7 +84,7 @@ function ItemPage() {
   };
 
   const handleNewItemSave = (newItem) => {
-    setItems([...items, { ...newItem, id: items.length + 1 }]);
+    setItems([...items, { ...newItem, id: items.length + 1, image: "/api/placeholder/50/50" }]);
     setNewItemModalOpen(false);
   };
 
@@ -134,12 +152,12 @@ function ItemPage() {
               <TableCell padding="checkbox">
                 <Checkbox />
               </TableCell>
-              {["NAME", "SKU", "TYPE", "DESCRIPTION", "RATE"].map((header) => (
+              {columnMap.map((column) => (
                 <TableCell
-                  key={header}
+                  key={column.key}
                   sx={{ fontWeight: "bold", userSelect: "none" }}
                 >
-                  {header}
+                  {column.label}
                 </TableCell>
               ))}
             </TableRow>
@@ -158,9 +176,13 @@ function ItemPage() {
                 <TableCell padding="checkbox">
                   <Checkbox onClick={(e) => e.stopPropagation()} />
                 </TableCell>
-                {["name", "sku", "type", "description", "rate"].map((key) => (
-                  <TableCell key={key} sx={{ userSelect: "none" }}>
-                    {item[key]}
+                {columnMap.map((column) => (
+                  <TableCell key={column.key} sx={{ userSelect: "none" }}>
+                    {column.key === "image" ? (
+                      <SquareImage src={item[column.key]} alt={item.name} />
+                    ) : (
+                      item[column.key]
+                    )}
                   </TableCell>
                 ))}
               </TableRow>

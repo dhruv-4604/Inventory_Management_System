@@ -98,7 +98,8 @@ const SignUpPage = () => {
        navigate("/signin")
         
     } catch (error) {
-        alert(error)
+        setEmailError('This email is already taken. Please Sign in.');
+        console.log(error)
     } finally {
         setLoading(false)
     }
@@ -179,7 +180,7 @@ const SignUpPage = () => {
             >
               Create Account
             </StyledButton>
-            </Box>
+            
             <GradientBorderButton
               fullWidth
               variant="outlined"
@@ -194,10 +195,11 @@ const SignUpPage = () => {
             >
               Signup using Google
             </GradientBorderButton>
+            
             <Typography variant="body2" align="center" sx={{ fontFamily: 'ClashGrotesk-Medium' }}>
               Already have an account? <Link to="/" sx={{ color: '#97C949', textDecoration: 'none' }}>Sign In</Link>
             </Typography>
-          
+            </Box>
         </Grid>
         <Grid item xs={12} md={6} sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', justifyContent: 'center' }}>
           <img src={illustration} alt="Supply Chain Illustration" style={{ maxWidth: '100%', height: 'auto' }} />

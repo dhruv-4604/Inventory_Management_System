@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractBaseUser
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from .models import Item
 
 User = get_user_model()
 
@@ -31,3 +32,14 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['email'] = user.email
         token['company_name'] = user.company_name
         return token
+
+
+
+class ItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Item
+        fields = ['item_id', 'name', 'image', 'category', 'description', 'selling_price', 'purchase_price', 'user']
+        read_only_fields = ['item_id']
+
+    def create(self, validated_data):
+        return Item.objects.create(**validated_data)
