@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo,useEffect } from "react";
 import {
   Box,
   Button,
@@ -19,8 +19,9 @@ import SortIcon from "@mui/icons-material/Sort";
 import SearchIcon from "@mui/icons-material/Search";
 import ItemDetailView from "./ItemDetailView";
 import NewItemModal from "./NewItemModal";
+import api from "../../api";
 
-// Custom styled component for square images
+
 const SquareImage = styled('img')({
   width: '50px',
   height: '50px',
@@ -51,17 +52,34 @@ const initialItemsData = [
 const columnMap = [
   { key: "image", label: "IMAGE" },
   { key: "name", label: "NAME" },
-  { key: "sku", label: "SKU" },
-  { key: "type", label: "TYPE" },
+  { key: "category", label: "CATEGORY" },
   { key: "description", label: "DESCRIPTION" },
-  { key: "rate", label: "RATE" },
+  { key: "purchase_price", label: "PURCHASE RATE" },
+  { key: "selling_price", label: "RATE" },
 ];
 
 function ItemPage() {
-  const [items, setItems] = useState(initialItemsData);
+  const [items, setItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
   const [newItemModalOpen, setNewItemModalOpen] = useState(false);
+  async function fetchData(){
+ 
+    try {
+      const res = await api.get('/token/items/')
+ 
+      setItems(res.data)
+      console.log(res.data)
+       
+      
+  } catch (error) {
+      alert(error)
+  }
+}
+  useEffect( () => { fetchData()
+}, [newItemModalOpen]);
+
+
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
@@ -92,14 +110,19 @@ function ItemPage() {
     <Box sx={{ p: 3, fontFamily: "ClashGrotesk-Medium" }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
         <Button
-          startIcon={<SortIcon />}
           variant="contained"
-          sx={{
-            backgroundColor: "#D9F99D",
-            color: "#232619",
-            "&:hover": { backgroundColor: "#BEF264" },
-            textTransform: "none",
-            fontWeight: "bold",
+          startIcon={<SortIcon />}
+          sx={{ 
+            
+            background: 'linear-gradient(90deg, #D1EA67 , #A6F15A )',
+            color: '#232619',
+            boxShadow:'none',
+            '&:hover': {
+              background: 'linear-gradient(90deg, #C1DA57 , #96E14A )',
+              boxShadow:'none'
+            },
+            textTransform: 'none',
+            fontWeight: 'semibold',
           }}
         >
           Sort
@@ -121,21 +144,27 @@ function ItemPage() {
             sx={{
               width: "300px",
               "& .MuiOutlinedInput-root": {
-                borderRadius: "20px",
+                borderRadius: "6px",
                 backgroundColor: "#F3F4F6",
               },
             }}
           />
           <Button
-            startIcon={<AddIcon />}
-            variant="contained"
+         
             onClick={handleNewItemClick}
-            sx={{
-              backgroundColor: "#D9F99D",
-              color: "#232619",
-              "&:hover": { backgroundColor: "#BEF264" },
-              textTransform: "none",
-              fontWeight: "bold",
+            variant="contained"
+            startIcon={<AddIcon />}
+            sx={{ 
+              height:'100%',
+              background: 'linear-gradient(90deg, #D1EA67 , #A6F15A )',
+              color: '#232619',
+              boxShadow:'none',
+              '&:hover': {
+                background: 'linear-gradient(90deg, #C1DA57 , #96E14A )',
+                boxShadow:'none'
+              },
+              textTransform: 'none',
+              fontWeight: 'semibold',
             }}
           >
             New Item

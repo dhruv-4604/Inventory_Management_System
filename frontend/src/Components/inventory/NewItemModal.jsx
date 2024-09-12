@@ -21,25 +21,16 @@ import {
   MenuItem,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-
+import api from '../../api';
 function NewItemModal({ open, onClose, onSave }) {
   const [itemData, setItemData] = useState({
-    type: 'Goods',
     name: '',
-    sku: '',
-    unit: '',
-    returnable: false,
-    dimensions: '',
-    weight: '',
-    brand: '',
-    manufacturer: '',
-    mpn: '',
-    upc: '',
-    isbn: '',
-    ean: '',
     description: '',
-    rate: '',
+    selling_price: '',
+    pruchase_price: '',
+    image:null,
   });
+  const [image, setImage] = useState(null);
   const fileInputRef = useRef(null);
 
   const handleChange = (event) => {
@@ -55,13 +46,30 @@ function NewItemModal({ open, onClose, onSave }) {
   };
 
   const handleFileChange = (event) => {
-    const files = event.target.files;
-    console.log(files);
-    // Handle file upload logic here
+    setImage(event.target.files[0])
+
   };
 
-  const handleSave = () => {
-    onSave(itemData);
+  const handleSave = async() => {
+    try {
+
+      const res = await api.post('/token/items/',{name:itemData.name,description:itemData.description,selling_price:itemData.selling_price,purchase_price:itemData.purchase_price,image:image}, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+ 
+   
+      
+  } catch (error) {
+      alert(error)
+  }
+    setItemData({
+      name: '',
+      description: '',
+      selling_price: '',
+      pruchase_price: '',
+    })
     onClose();
   };
 
@@ -98,14 +106,14 @@ function NewItemModal({ open, onClose, onSave }) {
               onChange={handleChange}
               required
             />
-            <TextField
+            {/* <TextField
               fullWidth
               margin="normal"
               label="SKU"
               name="sku"
               value={itemData.sku}
               onChange={handleChange}
-            />
+            /> */}
             <FormControl fullWidth margin="normal">
               <Select
                 value={itemData.unit}
@@ -124,22 +132,22 @@ function NewItemModal({ open, onClose, onSave }) {
               control={<Checkbox checked={itemData.returnable} onChange={handleChange} name="returnable" />}
               label="Returnable Item"
             />
-            <TextField
+            {/* <TextField
               fullWidth
               margin="normal"
               label="Dimensions (Length X Width X Height)"
               name="dimensions"
               value={itemData.dimensions}
               onChange={handleChange}
-            />
-            <TextField
+            /> */}
+            {/* <TextField
               fullWidth
               margin="normal"
               label="Weight"
               name="weight"
               value={itemData.weight}
               onChange={handleChange}
-            />
+            /> */}
             <TextField
               fullWidth
               margin="normal"
@@ -158,38 +166,38 @@ function NewItemModal({ open, onClose, onSave }) {
               value={itemData.manufacturer}
               onChange={handleChange}
             />
-            <TextField
+            {/* <TextField
               fullWidth
               margin="normal"
               label="MPN"
               name="mpn"
               value={itemData.mpn}
               onChange={handleChange}
-            />
-            <TextField
+            /> */}
+            {/* <TextField
               fullWidth
               margin="normal"
               label="UPC"
               name="upc"
               value={itemData.upc}
               onChange={handleChange}
-            />
-            <TextField
+            /> */}
+            {/* <TextField
               fullWidth
               margin="normal"
               label="ISBN"
               name="isbn"
               value={itemData.isbn}
               onChange={handleChange}
-            />
-            <TextField
+            /> */}
+            {/* <TextField
               fullWidth
               margin="normal"
               label="EAN"
               name="ean"
               value={itemData.ean}
               onChange={handleChange}
-            />
+            /> */}
             <TextField
               fullWidth
               margin="normal"
@@ -204,8 +212,16 @@ function NewItemModal({ open, onClose, onSave }) {
               fullWidth
               margin="normal"
               label="Rate"
-              name="rate"
-              value={itemData.rate}
+              name="selling_price"
+              value={itemData.selling_price}
+              onChange={handleChange}
+            />
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Purchase Rate"
+              name="purchase_price"
+              value={itemData.purchase_price}
               onChange={handleChange}
             />
           </Grid>
