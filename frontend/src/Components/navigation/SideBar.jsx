@@ -151,15 +151,26 @@ function Sidebar() {
     }
   }, [location.pathname]);
 
-  // Handle click on sidebar item
+  // Modify the handleItemClick function
   const handleItemClick = (itemText) => {
     const item = sidebarItems.find(item => item.text === itemText);
     if (item && item.isExpandable) {
       setExpandedItem(expandedItem === itemText ? null : itemText);
+      // If clicking on Inventory, navigate to the Items page
+      if (itemText === 'Inventory') {
+        navigate('/inventory/items');
+      }
     } else {
       setExpandedItem(null);
     }
   };
+
+  // Add a new effect to handle default selection
+  useEffect(() => {
+    if (location.pathname === '/inventory') {
+      navigate('/inventory/items');
+    }
+  }, [location.pathname, navigate]);
 
   // Handle search input change
   const handleSearchChange = (event) => {

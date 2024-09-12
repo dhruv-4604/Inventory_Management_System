@@ -7,6 +7,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import SortIcon from '@mui/icons-material/Sort';
 import AddIcon from '@mui/icons-material/Add';
 import GetAppIcon from '@mui/icons-material/GetApp';
+import NewOrderModal from './NewOrderModal'; // Make sure this import is correct
 
 // Mock data for sales orders
 const mockSalesOrders = [
@@ -21,6 +22,7 @@ const SaleOrdersPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const buttonStyle = {
     background: 'linear-gradient(90deg, #D1EA67 , #A6F15A )',
@@ -62,6 +64,31 @@ const SaleOrdersPage = () => {
     console.log(`Downloading invoice for order ${orderId}`);
     // In a real application, this would trigger the download of a file
   };
+
+  const handleOpenModal = () => {
+    console.log('Opening modal'); // Debug log
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    console.log('Closing modal'); // Debug log
+    setIsModalOpen(false);
+  };
+
+  const handleSaveNewOrder = (newOrder) => {
+    console.log('Saving new order', newOrder); // Debug log
+    const newId = salesOrders.length + 1;
+    const orderWithId = {
+      ...newOrder,
+      id: newId,
+      createdAt: new Date().toISOString().split('T')[0],
+      amount: parseFloat(newOrder.amount)
+    };
+    setSalesOrders([orderWithId, ...salesOrders]);
+    handleCloseModal();
+  };
+
+  console.log('isModalOpen:', isModalOpen); // Debug log
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -111,6 +138,7 @@ const SaleOrdersPage = () => {
             variant="contained"
             startIcon={<AddIcon />}
             sx={buttonStyle}
+            onClick={handleOpenModal}
           >
             New Order
           </Button>
@@ -180,6 +208,12 @@ const SaleOrdersPage = () => {
         onPageChange={handleChangePage}
         rowsPerPage={rowsPerPage}
         onRowsPerPageChange={handleChangeRowsPerPage}
+      />
+
+      <NewOrderModal
+        open={isModalOpen}
+        handleClose={handleCloseModal}
+        handleSave={handleSaveNewOrder}
       />
     </Box>
   );
