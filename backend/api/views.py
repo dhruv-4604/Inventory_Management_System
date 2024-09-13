@@ -72,3 +72,16 @@ class ItemListView(APIView):
             item = serializer.save()
             return Response(ItemSerializer(item).data, status=status.HTTP_200_OK if item_id else status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ItemDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        item_id = request.data.get('item_id')
+        if not item_id:
+            return Response({"error": "Item ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        item = get_object_or_404(Item, item_id=item_id, user=request.user)
+        item.delete()
+        return Response({"message": "Item deleted successfully"}, status=status.HTTP_200_OK)
