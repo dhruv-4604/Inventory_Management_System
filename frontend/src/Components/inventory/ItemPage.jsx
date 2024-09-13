@@ -29,33 +29,14 @@ const SquareImage = styled('img')({
   borderRadius: '4px',
 });
 
-const initialItemsData = [
-  {
-    id: 1,
-    image: "https://picsum.photos/200",
-    name: "Sofa",
-    sku: "Item 1 sku",
-    type: "Goods",
-    description: "A comfortable, modern sofa with plush cushions.",
-    rate: "Rs.731.00",
-    hsnCode: "812562",
-    unit: "Pcs",
-    upc: "Item 1 upc",
-    ean: "Item 1 ean",
-    isbn: "Item 1 isbn",
-    createdSource: "User",
-    salesAccount: "Advertising And Marketing",
-  },
-  // Add more items as needed
-];
 
 const columnMap = [
-  { key: "image", label: "IMAGE" },
-  { key: "name", label: "NAME" },
-  { key: "category", label: "CATEGORY" },
-  { key: "description", label: "DESCRIPTION" },
-  { key: "purchase_price", label: "PURCHASE RATE" },
-  { key: "selling_price", label: "RATE" },
+  { key: "image", label: "IMAGE", align: "left" },
+  { key: "name", label: "NAME", align: "left" },
+  { key: "category", label: "CATEGORY", align: "left" },
+  { key: "description", label: "DESCRIPTION", align: "left" },
+  { key: "quantity", label: "QUANTITY", align: "right" },
+  { key: "selling_price", label: "RATE", align: "right" },
 ];
 
 function ItemPage() {
@@ -104,6 +85,13 @@ function ItemPage() {
   const handleNewItemSave = (newItem) => {
     setItems([...items, { ...newItem, id: items.length + 1, image: "/api/placeholder/50/50" }]);
     setNewItemModalOpen(false);
+  };
+
+  const handleItemUpdate = (updatedItem) => {
+    setItems(prevItems => prevItems.map(item => 
+      item.item_id === updatedItem.item_id ? updatedItem : item
+    ));
+    setSelectedItem(updatedItem);
   };
 
   return (
@@ -178,12 +166,11 @@ function ItemPage() {
         <Table>
           <TableHead>
             <TableRow sx={{ backgroundColor: "#F9FAFB" }}>
-              <TableCell padding="checkbox">
-                <Checkbox />
-              </TableCell>
+            
               {columnMap.map((column) => (
                 <TableCell
                   key={column.key}
+                  align={column.align}
                   sx={{ fontWeight: "bold", userSelect: "none" }}
                 >
                   {column.label}
@@ -202,13 +189,13 @@ function ItemPage() {
                 }}
                 onClick={() => handleItemClick(item)}
               >
-                <TableCell padding="checkbox">
-                  <Checkbox onClick={(e) => e.stopPropagation()} />
-                </TableCell>
+              
                 {columnMap.map((column) => (
-                  <TableCell key={column.key} sx={{ userSelect: "none" }}>
+                  <TableCell key={column.key} align={column.align} sx={{ userSelect: "none" }}>
                     {column.key === "image" ? (
                       <SquareImage src={item[column.key]} alt={item.name} />
+                    ) : column.key === "selling_price" ? (
+                      `₹ ${item[column.key]}`
                     ) : (
                       item[column.key]
                     )}
@@ -221,8 +208,13 @@ function ItemPage() {
       </TableContainer>
       <ItemDetailView
         open={!!selectedItem}
-        onClose={() => setSelectedItem(null)}
+        onClose={() => { setSelectedItem(null); fetchData() }}
         item={selectedItem}
+        onItemDeleted={(deletedItemId) => {
+          setItems(prevItems => prevItems.filter(item => item.item_id !== deletedItemId));
+          fetchData();
+        }}
+        onItemUpdated={handleItemUpdate}
       />
       <NewItemModal
         open={newItemModalOpen}

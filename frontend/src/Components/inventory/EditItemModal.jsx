@@ -1,5 +1,4 @@
-// NewItemModal.js
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -7,41 +6,31 @@ import {
   DialogActions,
   TextField,
   Button,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  FormControl,
-  FormLabel,
-  Checkbox,
   Grid,
-  Typography,
   Box,
   IconButton,
-  Select,
-  MenuItem,
+  Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import api from '../../api';
-function NewItemModal({ open, onClose, onSave }) {
-  const [itemData, setItemData] = useState({
-    name: '',
-    brand: '',
-    description: '',
-    category: '',
-    purchase_price: '',
-    selling_price: '',
-    quantity: '',
-    restock_quantity: '',
-    image: null,
-  });
+
+function EditItemModal({ open, onClose, item, onSave }) {
+  const [itemData, setItemData] = useState({});
   const [image, setImage] = useState(null);
   const fileInputRef = useRef(null);
 
+  useEffect(() => {
+    if (item) {
+      setItemData({ ...item });
+      setImage(item.image);
+    }
+  }, [item]);
+
   const handleChange = (event) => {
-    const { name, value, checked, type } = event.target;
+    const { name, value } = event.target;
     setItemData(prevData => ({
       ...prevData,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: value
     }));
   };
 
@@ -51,13 +40,10 @@ function NewItemModal({ open, onClose, onSave }) {
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
-    setItemData(prevData => ({
-      ...prevData,
-      image: file
-    }));
+    setImage(file);
   };
 
-  const handleSave = async() => {
+  const handleSave = async () => {
     try {
       const formData = new FormData();
       for (const key in itemData) {
@@ -65,39 +51,27 @@ function NewItemModal({ open, onClose, onSave }) {
           formData.append(key, itemData[key]);
         }
       }
-      if (itemData.image) {
-        formData.append('image', itemData.image);
+      if (image) {
+        formData.append('image', image);
       }
 
-      const res = await api.post('/token/items/', formData, {
+      const res = await api.put('/token/items/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      
-      // Handle successful save (e.g., show a success message, update state, etc.)
       onSave(res.data);
+      onClose();
     } catch (error) {
-      alert(error)
+      console.error('Error updating item:', error);
+      // Handle error (e.g., show an error message to the user)
     }
-    setItemData({
-      name: '',
-      brand: '',
-      description: '',
-      category: '',
-      purchase_price: '',
-      selling_price: '',
-      quantity: '',
-      restock_quantity: '',
-      image: null,
-    })
-    onClose();
   };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
-        New Item
+        Edit Item
         <IconButton
           aria-label="close"
           onClick={onClose}
@@ -114,7 +88,7 @@ function NewItemModal({ open, onClose, onSave }) {
               margin="normal"
               label="Name"
               name="name"
-              value={itemData.name}
+              value={itemData.name || ''}
               onChange={handleChange}
               required
             />
@@ -123,7 +97,7 @@ function NewItemModal({ open, onClose, onSave }) {
               margin="normal"
               label="Brand"
               name="brand"
-              value={itemData.brand}
+              value={itemData.brand || ''}
               onChange={handleChange}
             />
             <TextField
@@ -131,7 +105,7 @@ function NewItemModal({ open, onClose, onSave }) {
               margin="normal"
               label="Description"
               name="description"
-              value={itemData.description}
+              value={itemData.description || ''}
               onChange={handleChange}
               multiline
               rows={2}
@@ -141,7 +115,7 @@ function NewItemModal({ open, onClose, onSave }) {
               margin="normal"
               label="Category"
               name="category"
-              value={itemData.category}
+              value={itemData.category || ''}
               onChange={handleChange}
             />
           </Grid>
@@ -151,7 +125,7 @@ function NewItemModal({ open, onClose, onSave }) {
               margin="normal"
               label="Purchase Rate"
               name="purchase_price"
-              value={itemData.purchase_price}
+              value={itemData.purchase_price || ''}
               onChange={handleChange}
               type="number"
             />
@@ -160,7 +134,7 @@ function NewItemModal({ open, onClose, onSave }) {
               margin="normal"
               label="Selling Price"
               name="selling_price"
-              value={itemData.selling_price}
+              value={itemData.selling_price || ''}
               onChange={handleChange}
               type="number"
             />
@@ -169,47 +143,19 @@ function NewItemModal({ open, onClose, onSave }) {
               margin="normal"
               label="Quantity"
               name="quantity"
-              value={itemData.quantity}
+              value={itemData.quantity || ''}
               onChange={handleChange}
               type="number"
             />
             <TextField
               fullWidth
               margin="normal"
-              label="Restock Quantity (Optional)"
+              label="Restock Quantity"
               name="restock_quantity"
-              value={itemData.restock_quantity}
+              value={itemData.restock_quantity || ''}
               onChange={handleChange}
               type="number"
             />
-          </Grid>
-          <Grid item xs={12}>
-            <Box
-              sx={{
-                border: '1px dashed grey',
-                height: 200,
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                flexDirection: 'column',
-                cursor: 'pointer',
-                mt: 2,
-              }}
-              onClick={handleBrowseClick}
-            >
-              <Typography>Drag image here</Typography>
-              <Typography>or</Typography>
-              <Typography color="primary" sx={{ cursor: 'pointer' }}>
-                Browse image
-              </Typography>
-              <input
-                type="file"
-                ref={fileInputRef}
-                style={{ display: 'none' }}
-                onChange={handleFileChange}
-                accept="image/*"
-              />
-            </Box>
           </Grid>
         </Grid>
       </DialogContent>
@@ -221,4 +167,4 @@ function NewItemModal({ open, onClose, onSave }) {
   );
 }
 
-export default NewItemModal;
+export default EditItemModal;

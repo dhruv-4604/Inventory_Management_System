@@ -1,5 +1,5 @@
 // ItemDetailView.js
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -13,10 +13,14 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import api from "../../api";
+import EditItemModal from './EditItemModal';
 
-function ItemDetailView({ open, onClose, item }) {
+function ItemDetailView({ open, onClose, item, onItemDeleted, onItemUpdated }) {
   const [tabValue, setTabValue] = React.useState(0);
   const fileInputRef = useRef(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -33,6 +37,26 @@ function ItemDetailView({ open, onClose, item }) {
     // You would typically upload these files to your server or handle them as needed
   };
 
+  const handleDeleteItem = async () => {
+    try {
+      await api.delete(`/token/items/delete/${item.item_id}`);
+      onClose();
+      onItemDeleted(item.item_id);
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      // Handle error (e.g., show an error message to the user)
+    }
+  };
+
+  const handleEditClick = () => {
+    setEditModalOpen(true);
+  };
+
+  const handleEditSave = (updatedItem) => {
+    onItemUpdated(updatedItem);
+    setEditModalOpen(false);
+  };
+
   if (!item) return null;
 
   return (
@@ -41,8 +65,11 @@ function ItemDetailView({ open, onClose, item }) {
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h6">{item.name}</Typography>
           <Box>
-            <IconButton onClick={onClose}>
+            <IconButton onClick={handleEditClick}>
               <EditIcon />
+            </IconButton>
+            <IconButton onClick={handleDeleteItem} color="error">
+              <DeleteIcon />
             </IconButton>
             <IconButton onClick={onClose}>
               <CloseIcon />
@@ -147,6 +174,12 @@ function ItemDetailView({ open, onClose, item }) {
         {tabValue === 1 && <Typography>Transactions content</Typography>}
         {tabValue === 2 && <Typography>History content</Typography>}
       </DialogContent>
+      <EditItemModal
+        open={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        item={item}
+        onSave={handleEditSave}
+      />
     </Dialog>
   );
 }

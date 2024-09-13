@@ -11,7 +11,7 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import TopBar from "./Components/navigation/TopBar.jsx";
 import Sidebar from "./Components/navigation/SideBar.jsx";
 import Dashboard from "./Components/dashboard/Dashboard.js";
-import ItemPage from "./Components/inventory/ItemPage.js";
+import ItemPage from "./Components/inventory/ItemPage.jsx";
 import SignInPage from "./Components/login/SignInPage.jsx";
 import SignUpPage from "./Components/login/SignUpPage.jsx";
 import "./fonts.css";
