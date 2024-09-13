@@ -69,6 +69,7 @@ const SignInPage = () => {
   const [emailError, setEmailError] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState('');
  const navigate = useNavigate();
 
   const validateEmail = (email) => {
@@ -99,7 +100,7 @@ const SignInPage = () => {
           navigate("/dashboard")
         
     } catch (error) {
-        alert(error)
+      setFormError("Invalid email or password.")
     } finally {
         setLoading(false)
     }
@@ -173,6 +174,7 @@ const SignInPage = () => {
             >
               Login with Google
             </GradientBorderButton>
+            <Box textAlign='center' color='#d32f2f' paddingBottom={2}>{formError}</Box>
             <Typography variant="body2" align="center" sx={{ fontFamily: 'ClashGrotesk-Medium' }}>
               Don't have an account? <Link to="/signup" sx={{ color: '#97C949', textDecoration: 'none' }}>Create account</Link>
             </Typography>

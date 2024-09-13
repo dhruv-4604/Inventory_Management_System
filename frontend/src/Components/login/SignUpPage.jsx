@@ -69,8 +69,12 @@ const GradientBorderButton = styled(Button)(({ theme }) => ({
 const SignUpPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [companyname, setCompanyname] = useState('');
+  const [phonenumber, setPhonenumber] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
   const navigate = useNavigate();
 
   const validateEmail = (email) => {
@@ -88,22 +92,46 @@ const SignUpPage = () => {
     }
   };
 
+  const validatePhoneNumber = (phone) => {
+    const re = /^\d{10}$/;
+    return re.test(phone);
+  };
+
+  const handlePhoneChange = (event) => {
+    const newPhone = event.target.value;
+    setPhonenumber(newPhone);
+    if (newPhone && !validatePhoneNumber(newPhone)) {
+      setPhoneError('Please enter a valid 10-digit phone number');
+    } else {
+      setPhoneError('');
+    }
+  };
+
   const handleSubmit = async (e) => {
-    console.log('loll')
-    setLoading(true);
     e.preventDefault();
+    setLoading(true);
+
+    if (!validatePhoneNumber(phonenumber)) {
+      setPhoneError('Please enter a valid 10-digit phone number');
+      setLoading(false);
+      return;
+    }
 
     try {
-        const res = await api.post('/register/', { email:email,password:password,company_name:'1214',phone_number:'12223' })
-       navigate("/signin")
-        
+      const res = await api.post('/register/', { 
+        email: email,
+        password: password,
+        company_name: companyname,
+        phone_number: phonenumber
+      });
+      navigate("/signin");
     } catch (error) {
-        setEmailError('This email is already taken. Please Sign in.');
-        console.log(error)
+      setFormError('This email is already taken. Please Sign in.');
+      console.log(error);
     } finally {
-        setLoading(false)
+      setLoading(false);
     }
-};
+  };
 
   return (
     <Container maxWidth="xl" sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -119,7 +147,7 @@ const SignUpPage = () => {
             Enter the details to get going
           </Typography>
           
-          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ width: '100%', maxWidth: 400 }}>
+          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ width: '100%', maxWidth: 400 }} >
             <StyledTextField 
               fullWidth
               placeholder="Enter Email Id"
@@ -144,6 +172,7 @@ const SignUpPage = () => {
             />
             <StyledTextField
               fullWidth
+              onChange={(e)=>setCompanyname(e.target.value)}
               placeholder="Enter Company Name"
               InputProps={{
                 startAdornment: <BusinessIcon sx={{ color: 'action.active', mr: 1 }} />,
@@ -153,6 +182,10 @@ const SignUpPage = () => {
             <StyledTextField
               fullWidth
               placeholder="Enter Company Phone"
+              value={phonenumber}
+              onChange={handlePhoneChange}
+              error={!!phoneError}
+              helperText={phoneError}
               InputProps={{
                 startAdornment: <PhoneIcon sx={{ color: 'action.active', mr: 1 }} />,
               }}
@@ -184,7 +217,7 @@ const SignUpPage = () => {
             <GradientBorderButton
               fullWidth
               variant="outlined"
-            
+             
 
               startIcon={<img src={googleIcon} alt="Google" width="18" height="18" />}
               sx={{ 
@@ -195,7 +228,7 @@ const SignUpPage = () => {
             >
               Signup using Google
             </GradientBorderButton>
-            
+          <Box textAlign='center' color='#d32f2f' paddingBottom={2}>{formError}</Box>
             <Typography variant="body2" align="center" sx={{ fontFamily: 'ClashGrotesk-Medium' }}>
               Already have an account? <Link to="/" sx={{ color: '#97C949', textDecoration: 'none' }}>Sign In</Link>
             </Typography>
