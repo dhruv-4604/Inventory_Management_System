@@ -57,31 +57,35 @@ class ItemListView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        item_id = request.data.get('item_id')
-        request.data['user'] = request.user.id
+        mutable_data = request.data.copy()
+        mutable_data['user'] = request.user.id
 
-        if item_id:
-            # Update existing item
-            item = get_object_or_404(Item, item_id=item_id, user=request.user)
-            serializer = ItemSerializer(item, data=request.data, partial=True)
-        else:
-            # Create new item
-            serializer = ItemSerializer(data=request.data)
-
+        serializer = ItemSerializer(data=mutable_data)
         if serializer.is_valid():
             item = serializer.save()
-            return Response(ItemSerializer(item).data, status=status.HTTP_200_OK if item_id else status.HTTP_201_CREATED)
+            return Response(ItemSerializer(item).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-class ItemDeleteView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        item_id = request.data.get('item_id')
+    def put(self, request):
+        mutable_data = request.data.copy()
+        item_id = mutable_data.get('item_id')
+        
         if not item_id:
-            return Response({"error": "Item ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "item_id is required for updating an item"}, status=status.HTTP_400_BAD_REQUEST)
 
         item = get_object_or_404(Item, item_id=item_id, user=request.user)
+        mutable_data['user'] = request.user.id
+
+        serializer = ItemSerializer(item, data=mutable_data, partial=True)
+        if serializer.is_valid():
+            updated_item = serializer.save()
+            return Response(ItemSerializer(updated_item).data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class DeleteItemView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, item_id):
+        item = get_object_or_404(Item, item_id=item_id, user=request.user)
         item.delete()
-        return Response({"message": "Item deleted successfully"}, status=status.HTTP_200_OK)
+        return Response({"message": "Item deleted successfully"}, status=status.HTTP_204_NO_CONTENT)

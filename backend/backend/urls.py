@@ -1,7 +1,7 @@
 from django.urls import path
 from django.contrib import admin
 
-from api.views import ItemListView, RegisterView, CustomTokenObtainPairView, CustomTokenRefreshView, UserDetailsAPIView
+from api.views import DeleteItemView, ItemListView, RegisterView, CustomTokenObtainPairView, CustomTokenRefreshView, UserDetailsAPIView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -10,4 +10,5 @@ urlpatterns = [
     path('token/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
     path('token/user/', UserDetailsAPIView.as_view(), name='token_refresh'),
     path('token/items/',ItemListView.as_view(),name='items'),
+    path('token/items/delete/<str:item_id>',DeleteItemView.as_view(),name='delete_item'),
 ]

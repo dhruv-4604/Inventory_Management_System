@@ -38,8 +38,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 class ItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = Item
-        fields = ['item_id', 'name', 'image', 'category', 'description', 'selling_price', 'purchase_price', 'user']
+        fields = ['item_id', 'name', 'brand', 'image', 'category', 'description', 'selling_price', 'purchase_price', 'user','quantity','reorder_point']
         read_only_fields = ['item_id']
 
     def create(self, validated_data):
         return Item.objects.create(**validated_data)
+    
