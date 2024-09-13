@@ -8,41 +8,37 @@ import SearchIcon from '@mui/icons-material/Search';
 import SortIcon from '@mui/icons-material/Sort';
 import AddIcon from '@mui/icons-material/Add';
 import axios from 'axios';
+import api from '../../api';
+
+
 
 const CustomerPage = () => {
-  const [customers, setCustomers] = useState([
-    {
-      id: 1,
-      firstName: 'Rahul',
-      lastName: 'Sharma',
-      email: 'rahul.sharma@example.com',
-      phoneNumber: '9876543210',
-      address: '123 MG Road',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      pincode: '400001'
-    },
-    // Add more initial customer data as needed
-  ]);
+  const [customers, setCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newCustomer, setNewCustomer] = useState({
-    firstName: '',
-    lastName: '',
+    name: '',
     email: '',
-    phoneNumber: '',
+    phone_number: '',
     address: '',
-    state: '',
-    city: '',
-    pincode: '',
   });
   const [errors, setErrors] = useState({});
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
 
   useEffect(() => {
+    fetchCustomers();
     fetchStates();
   }, []);
+
+  const fetchCustomers = async () => {
+    try {
+      const response = await api.get('/customers/');  
+      setCustomers(response.data);
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+    }
+  };
 
   const fetchStates = async () => {
     try {
@@ -80,14 +76,10 @@ const CustomerPage = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setNewCustomer({
-      firstName: '',
-      lastName: '',
+      name: '',
       email: '',
-      phoneNumber: '',
+      phone_number: '',
       address: '',
-      state: '',
-      city: '',
-      pincode: '',
     });
     setErrors({});
   };
@@ -104,28 +96,42 @@ const CustomerPage = () => {
 
   const validateForm = () => {
     let tempErrors = {};
-    tempErrors.firstName = newCustomer.firstName ? "" : "First name is required";
-    tempErrors.lastName = newCustomer.lastName ? "" : "Last name is required";
+    tempErrors.name = newCustomer.name ? "" : "Name is required";
     tempErrors.email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newCustomer.email) ? "" : "Email is not valid";
-    tempErrors.phoneNumber = /^[6-9]\d{9}$/.test(newCustomer.phoneNumber) ? "" : "Phone number is not valid";
+    tempErrors.phone_number = /^[6-9]\d{9}$/.test(newCustomer.phone_number) ? "" : "Phone number is not valid";
     tempErrors.address = newCustomer.address ? "" : "Address is required";
-    tempErrors.state = newCustomer.state ? "" : "State is required";
-    tempErrors.city = newCustomer.city ? "" : "City is required";
-    tempErrors.pincode = /^[1-9][0-9]{5}$/.test(newCustomer.pincode) ? "" : "Pincode is not valid";
 
     setErrors(tempErrors);
     return Object.values(tempErrors).every(x => x === "");
   };
 
-  const handleAddCustomer = () => {
+  const handleAddCustomer = async () => {
     if (validateForm()) {
-      const newCustomerWithId = {
-        ...newCustomer,
-        id: customers.length + 1, // Simple ID generation
-        state: states.find(s => s.state_id === parseInt(newCustomer.state))?.state_name || newCustomer.state
-      };
-      setCustomers([...customers, newCustomerWithId]);
-      handleCloseModal();
+      try {
+        const response = await api.post('/customers/', newCustomer);
+        if (response.data) {
+          setCustomers(prevCustomers => [...prevCustomers, response.data]);
+          handleCloseModal();
+          console.log('Customer added successfully:', response.data);
+          // Add a success message for the user here
+        } else {
+          throw new Error('No data received from the server');
+        }
+      } catch (error) {
+        console.error('Error adding customer:', error.response ? error.response.data : error.message);
+        let errorMessage = 'Failed to add customer. ';
+        if (error.response && error.response.data) {
+          if (error.response.data.user) {
+            errorMessage += error.response.data.user.join(', ');
+          } else {
+            errorMessage += JSON.stringify(error.response.data);
+          }
+        }
+        alert(errorMessage);
+      }
+    } else {
+      console.log('Form validation failed');
+      // ... existing code for form validation failure ...
     }
   };
 
@@ -178,14 +184,10 @@ const CustomerPage = () => {
               <TableCell padding="checkbox">
                 <Checkbox color="primary" />
               </TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>FIRST NAME</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>LAST NAME</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>NAME</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>EMAIL</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>PHONE NUMBER</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>ADDRESS</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>CITY</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>STATE</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>PINCODE</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -197,14 +199,10 @@ const CustomerPage = () => {
                 <TableCell padding="checkbox">
                   <Checkbox color="primary" />
                 </TableCell>
-                <TableCell>{customer.firstName}</TableCell>
-                <TableCell>{customer.lastName}</TableCell>
+                <TableCell>{customer.name}</TableCell>
                 <TableCell>{customer.email}</TableCell>
-                <TableCell>{customer.phoneNumber}</TableCell>
+                <TableCell>{customer.phone_number}</TableCell>
                 <TableCell>{customer.address}</TableCell>
-                <TableCell>{customer.city}</TableCell>
-                <TableCell>{customer.state}</TableCell>
-                <TableCell>{customer.pincode}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -235,28 +233,16 @@ const CustomerPage = () => {
             Add New Customer
           </Typography>
           <Grid container spacing={2}>
-            <Grid item xs={6}>
+            <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="First Name"
-                name="firstName"
-                value={newCustomer.firstName}
+                label="Name"
+                name="name"
+                value={newCustomer.name}
                 onChange={handleInputChange}
                 variant="outlined"
-                error={!!errors.firstName}
-                helperText={errors.firstName}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Last Name"
-                name="lastName"
-                value={newCustomer.lastName}
-                onChange={handleInputChange}
-                variant="outlined"
-                error={!!errors.lastName}
-                helperText={errors.lastName}
+                error={!!errors.name}
+                helperText={errors.name}
               />
             </Grid>
             <Grid item xs={6}>
@@ -275,12 +261,12 @@ const CustomerPage = () => {
               <TextField
                 fullWidth
                 label="Phone Number"
-                name="phoneNumber"
-                value={newCustomer.phoneNumber}
+                name="phone_number"
+                value={newCustomer.phone_number}
                 onChange={handleInputChange}
                 variant="outlined"
-                error={!!errors.phoneNumber}
-                helperText={errors.phoneNumber}
+                error={!!errors.phone_number}
+                helperText={errors.phone_number}
               />
             </Grid>
             <Grid item xs={12}>
@@ -291,57 +277,10 @@ const CustomerPage = () => {
                 value={newCustomer.address}
                 onChange={handleInputChange}
                 variant="outlined"
+                multiline
+                rows={3}
                 error={!!errors.address}
                 helperText={errors.address}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <FormControl fullWidth error={!!errors.state}>
-                <InputLabel>State</InputLabel>
-                <Select
-                  value={newCustomer.state}
-                  label="State"
-                  name="state"
-                  onChange={handleInputChange}
-                >
-                  {states.map((state) => (
-                    <MenuItem key={state.state_id} value={state.state_id}>
-                      {state.state_name}
-                    </MenuItem>
-                  ))}
-                </Select>
-                <FormHelperText>{errors.state}</FormHelperText>
-              </FormControl>
-            </Grid>
-            <Grid item xs={6}>
-              <FormControl fullWidth error={!!errors.city}>
-                <InputLabel>City</InputLabel>
-                <Select
-                  value={newCustomer.city}
-                  label="City"
-                  name="city"
-                  onChange={handleInputChange}
-                  disabled={!newCustomer.state}
-                >
-                  {cities.map((city) => (
-                    <MenuItem key={city.district_id} value={city.district_name}>
-                      {city.district_name}
-                    </MenuItem>
-                  ))}
-                </Select>
-                <FormHelperText>{errors.city}</FormHelperText>
-              </FormControl>
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Pincode"
-                name="pincode"
-                value={newCustomer.pincode}
-                onChange={handleInputChange}
-                variant="outlined"
-                error={!!errors.pincode}
-                helperText={errors.pincode}
               />
             </Grid>
           </Grid>

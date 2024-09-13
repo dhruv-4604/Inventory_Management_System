@@ -129,8 +129,8 @@ function Sidebar() {
       ]
     },
     { icon: <SalesIcon />, text: 'Sales', isExpandable: true, to: '/sales', subItems: [
-      { text: 'Customers', to: 'customerpage' },
       { text: 'Sale Orders', to: 'sale_orders' },
+      { text: 'Customers', to: 'customerpage' },
       { text: 'Shipments', to: 'Shipments' }
     ]},
     { icon: <StoreIcon />, text: 'Purchases', isExpandable: true, to: '/Purchases',subItems: [
@@ -169,6 +169,9 @@ function Sidebar() {
   useEffect(() => {
     if (location.pathname === '/inventory') {
       navigate('/inventory/items');
+    }
+    if (location.pathname === '/sales') {
+      navigate('/sales/sale_orders');
     }
   }, [location.pathname, navigate]);
 
