@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   TextField,
@@ -25,6 +26,7 @@ const mockPurchaseOrders = [
 ];
 
 const PurchaseOrdersPage = () => {
+  const navigate = useNavigate();
   const [purchaseOrders, setPurchaseOrders] = useState(mockPurchaseOrders);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -39,8 +41,7 @@ const PurchaseOrdersPage = () => {
   };
 
   const handleNewOrder = () => {
-    // Implement new order logic here
-    console.log('Creating new purchase order');
+    navigate('/purchase/new-purchase-order');
   };
 
   const handleMarkAsPaid = (orderId) => {

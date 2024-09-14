@@ -114,3 +114,23 @@ class CustomerListView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+from .models import Vendor
+from .serializers import VendorSerializer
+
+class VendorListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        vendors = Vendor.objects.filter(user=request.user)
+        serializer = VendorSerializer(vendors, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+       vendor_id = request.data.get('vendor_id')
+       request.data['user'] = request.user.id
+       serializer = VendorSerializer(data=request.data)
+       if serializer.is_valid():
+           serializer.save()
+           return Response(serializer.data, status=status.HTTP_201_CREATED)
+       return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

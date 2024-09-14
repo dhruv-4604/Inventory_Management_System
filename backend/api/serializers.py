@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractBaseUser
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import Item,Customer
+from .models import Item,Customer,Vendor
 
 User = get_user_model()
 
@@ -52,5 +52,16 @@ class CustomerSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return Customer.objects.create(**validated_data)
+
+
+
+class VendorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Vendor
+        fields = ['vendor_id', 'name', 'email', 'phone_number', 'user']
+        read_only_fields = ['vendor_id']
+
+    def create(self, validated_data):
+        return Vendor.objects.create(**validated_data)
 
 

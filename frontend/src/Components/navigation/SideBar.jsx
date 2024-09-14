@@ -134,8 +134,8 @@ function Sidebar() {
       { text: 'Shipments', to: 'Shipments' }
     ]},
     { icon: <StoreIcon />, text: 'Purchases', isExpandable: true, to: '/Purchases',subItems: [
-      { text: 'Vendors', to: 'vendors' },
-      { text: 'Purchase Orders', to: 'Purchase_Orders' }
+      { text: 'Purchase Orders', to: 'Purchase_Orders' },
+      { text: 'Vendors', to: 'vendors' }
     ] },
     { icon: <SettingsIcon />, text: 'Settings', to: '/Settings' },
   ];
@@ -172,6 +172,9 @@ function Sidebar() {
     }
     if (location.pathname === '/sales') {
       navigate('/sales/sale_orders');
+    }
+    if (location.pathname === '/Purchases') {
+      navigate('/Purchases/Purchase_Orders');
     }
   }, [location.pathname, navigate]);
 

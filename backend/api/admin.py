@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import CustomUser, Item,Customer
+from .models import CustomUser, Item,Customer,Vendor
 
 class CustomUserAdmin(BaseUserAdmin):
     # The forms to add and change user instances
@@ -31,3 +31,4 @@ class CustomUserAdmin(BaseUserAdmin):
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Item)
 admin.site.register(Customer)
+admin.site.register(Vendor)

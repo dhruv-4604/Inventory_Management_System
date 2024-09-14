@@ -4,7 +4,8 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  useLocation,Navigate
+  useLocation,
+  Navigate,
 } from "react-router-dom";
 import { Box, CssBaseline } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
@@ -24,7 +25,8 @@ import PriceListPage from "./Components/inventory/PriceList.jsx";
 import PurchaseOrdersPage from "./Components/purchase/PurchaseOrdersPage.jsx";
 import VendorsPage from "./Components/purchase/VendorsPage.jsx";
 import ProtectedRoute from "./ProtectedRoute.jsx";
-import NewSaleOrderPage from './Components/sales/NewSaleOrderPage';
+import NewSaleOrderPage from "./Components/sales/NewSaleOrderPage";
+import NewPurchaseOrderPage from "./Components/purchase/NewPurchaseOrderPage.jsx";
 
 const theme = createTheme({
   typography: {
@@ -78,15 +80,18 @@ function MainContent() {
         }}
       >
         <Routes>
-         
-          <Route path="/dashboard" element={ <Dashboard />} />
-          
+          <Route path="/dashboard" element={<Dashboard />} />
+
           <Route path="/inventory/items" element={<ItemPage />} />
           <Route path="/inventory/categories" element={<CategoriesPage />} />
           <Route path="/inventory/price_list" element={<PriceListPage />} />
           <Route path="/sales/customerpage" element={<CustomerPage />} />
           <Route path="/sales/sale_orders" element={<SalesOrderPage />} />
           <Route path="/sales/new_order" element={<NewSaleOrderPage />} />
+          <Route
+            path="/purchase/new-purchase-order"
+            element={<NewPurchaseOrderPage />}
+          />
           <Route path="/sales/shipments" element={<ShipmentsPage />} />
           <Route
             path="purchases/purchase_orders"
@@ -95,15 +100,13 @@ function MainContent() {
           <Route path="purchases/vendors" element={<VendorsPage />} />
         </Routes>
       </Box>
-
     </ProtectedRoute>
   );
 }
 
-
 function Logout() {
-  localStorage.clear()
-  return <Navigate to="/signin" />
+  localStorage.clear();
+  return <Navigate to="/signin" />;
 }
 
 function App() {
@@ -113,8 +116,8 @@ function App() {
         <Box sx={{ display: "flex" }}>
           <CssBaseline />
           <Routes>
-          <Route path="/logout" element={<Logout />} />
-          <Route path="/" element={<SignInPage />} />
+            <Route path="/logout" element={<Logout />} />
+            <Route path="/" element={<SignInPage />} />
             <Route path="/signin" element={<SignInPage />} />
             <Route path="/signup" element={<SignUpPage />} />
             <Route path="*" element={<MainContent />} />
