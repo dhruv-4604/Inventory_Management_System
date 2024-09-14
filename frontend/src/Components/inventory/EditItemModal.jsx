@@ -13,6 +13,8 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import api from '../../api';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 function EditItemModal({ open, onClose, item, onSave }) {
   const [itemData, setItemData] = useState({});
@@ -41,18 +43,35 @@ function EditItemModal({ open, onClose, item, onSave }) {
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     setImage(file);
+    setItemData(prevData => ({
+      ...prevData,
+      image: file
+    }));
+  };
+
+  const handleRemoveImage = () => {
+    setImage(null);
+    setItemData(prevData => ({
+      ...prevData,
+      image: null
+    }));
   };
 
   const handleSave = async () => {
     try {
       const formData = new FormData();
       for (const key in itemData) {
-        if (key !== 'image') {
+        if (key === 'image') {
+          if (itemData[key] instanceof File) {
+            formData.append('image', itemData[key]);
+          } else if (itemData[key] === null) {
+            // If image is explicitly set to null, append an empty string to indicate removal
+            formData.append('image', '');
+          }
+          // If image is undefined (not changed), don't append anything
+        } else {
           formData.append(key, itemData[key]);
         }
-      }
-      if (image) {
-        formData.append('image', image);
       }
 
       const res = await api.put('/token/items/', formData, {
@@ -152,10 +171,38 @@ function EditItemModal({ open, onClose, item, onSave }) {
               margin="normal"
               label="Restock Quantity"
               name="restock_quantity"
-              value={itemData.restock_quantity || ''}
+              value={itemData.reorder_point || ''}
               onChange={handleChange}
               type="number"
             />
+          </Grid>
+          <Grid item xs={12}>
+            <Box display="flex" alignItems="center">
+              <input
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleFileChange}
+                ref={fileInputRef}
+              />
+              <Button
+                variant="outlined"
+                startIcon={<AddPhotoAlternateIcon />}
+                onClick={handleBrowseClick}
+              >
+                {image ? 'Change Image' : 'Add Image'}
+              </Button>
+              {image && (
+                <>
+                  <Typography variant="body2" sx={{ ml: 2 }}>
+                    {image instanceof File ? image.name : 'Current image'}
+                  </Typography>
+                  <IconButton onClick={handleRemoveImage} color="error" sx={{ ml: 1 }}>
+                    <DeleteIcon />
+                  </IconButton>
+                </>
+              )}
+            </Box>
           </Grid>
         </Grid>
       </DialogContent>

@@ -1,6 +1,7 @@
 from django.urls import path
 from django.contrib import admin
-
+from django.conf import settings
+from django.conf.urls.static import static
 from api.views import DeleteItemView,CustomerListView, ItemListView, RegisterView, CustomTokenObtainPairView, CustomTokenRefreshView, UserDetailsAPIView
 
 urlpatterns = [
@@ -12,4 +13,4 @@ urlpatterns = [
     path('token/items/',ItemListView.as_view(),name='items'),
     path('token/items/delete/<str:item_id>',DeleteItemView.as_view(),name='delete_item'),
     path('customers/', CustomerListView.as_view(), name='customer-list'),
-]
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

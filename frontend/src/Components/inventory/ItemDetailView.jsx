@@ -92,82 +92,85 @@ function ItemDetailView({ open, onClose, item, onItemDeleted, onItemUpdated }) {
               <Typography variant="h6" gutterBottom>Item Information</Typography>
               <Grid container spacing={2}>
                 <Grid item xs={6}>
-                  <Typography variant="subtitle2">Item Type</Typography>
-                  <Typography>{item.type}</Typography>
+                  <Typography variant="subtitle2">Name</Typography>
+                  <Typography>{item.name}</Typography>
                 </Grid>
                 <Grid item xs={6}>
-                  <Typography variant="subtitle2">SKU</Typography>
-                  <Typography>{item.sku}</Typography>
+                  <Typography variant="subtitle2">Brand</Typography>
+                  <Typography>{item.brand || 'N/A'}</Typography>
                 </Grid>
                 <Grid item xs={6}>
-                  <Typography variant="subtitle2">HSN Code</Typography>
-                  <Typography>{item.hsnCode || 'N/A'}</Typography>
+                  <Typography variant="subtitle2">Category</Typography>
+                  <Typography>{item.category || 'N/A'}</Typography>
                 </Grid>
                 <Grid item xs={6}>
-                  <Typography variant="subtitle2">Unit</Typography>
-                  <Typography>{item.unit || 'N/A'}</Typography>
+                  <Typography variant="subtitle2">Quantity</Typography>
+                  <Typography>{item.quantity}</Typography>
                 </Grid>
                 <Grid item xs={6}>
-                  <Typography variant="subtitle2">UPC</Typography>
-                  <Typography>{item.upc || 'N/A'}</Typography>
+                  <Typography variant="subtitle2">Reorder Point</Typography>
+                  <Typography>{item.reorder_point}</Typography>
                 </Grid>
                 <Grid item xs={6}>
-                  <Typography variant="subtitle2">EAN</Typography>
-                  <Typography>{item.ean || 'N/A'}</Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="subtitle2">ISBN</Typography>
-                  <Typography>{item.isbn || 'N/A'}</Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="subtitle2">Created Source</Typography>
-                  <Typography>{item.createdSource || 'N/A'}</Typography>
-                </Grid>
-              </Grid>
-              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>Sales Information</Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <Typography variant="subtitle2">Selling Price</Typography>
-                  <Typography>{item.rate}</Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="subtitle2">Sales Account</Typography>
-                  <Typography>{item.salesAccount || 'N/A'}</Typography>
+                  <Typography variant="subtitle2">User</Typography>
+                  <Typography>{item.user || 'N/A'}</Typography>
                 </Grid>
                 <Grid item xs={12}>
                   <Typography variant="subtitle2">Description</Typography>
                   <Typography>{item.description}</Typography>
                 </Grid>
               </Grid>
+              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>Sales Information</Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <Typography variant="subtitle2">Selling Price</Typography>
+                  <Typography>{item.selling_price}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="subtitle2">Purchase Price</Typography>
+                  <Typography>{item.purchase_price}</Typography>
+                </Grid>
+              </Grid>
             </Grid>
             <Grid item xs={12} md={4}>
-              <Box
-                sx={{
-                  border: '1px dashed grey',
-                  height: 200,
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  flexDirection: 'column',
-                  cursor: 'pointer',
-                }}
-                onClick={handleBrowseClick}
-              >
-                <Typography>Drag image(s) here</Typography>
-                <Typography>or</Typography>
-                <Typography color="primary" sx={{ cursor: 'pointer' }} onClick={handleBrowseClick}>
-                  Browse images
-                </Typography>
-                <Typography variant="caption">You can add up to 15 images, each not exceeding 5 MB.</Typography>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  style={{ display: 'none' }}
-                  onChange={handleFileChange}
-                  multiple
-                  accept="image/*"
+              {item.image ? (
+                <Box
+                  component="img"
+                  src={"http://127.0.0.1:8000/"+item.image}
+                  alt={item.name}
+                  sx={{
+                    width: '100%',
+                    height: 'auto',
+                    maxHeight: 200,
+                    objectFit: 'contain',
+                  }}
                 />
-              </Box>
+              ) : (
+                <Box
+                  sx={{
+                    border: '1px dashed grey',
+                    height: 200,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    flexDirection: 'column',
+                    cursor: 'pointer',
+                  }}
+                  onClick={handleBrowseClick}
+                >
+                  <Typography>No image available</Typography>
+                  <Typography color="primary" sx={{ cursor: 'pointer' }} onClick={handleBrowseClick}>
+                    Upload image
+                  </Typography>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    style={{ display: 'none' }}
+                    onChange={handleFileChange}
+                    accept="image/*"
+                  />
+                </Box>
+              )}
             </Grid>
           </Grid>
         )}

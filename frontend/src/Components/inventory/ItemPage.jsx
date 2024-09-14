@@ -193,7 +193,7 @@ function ItemPage() {
                 {columnMap.map((column) => (
                   <TableCell key={column.key} align={column.align} sx={{ userSelect: "none" }}>
                     {column.key === "image" ? (
-                      <SquareImage src={item[column.key]} alt={item.name} />
+                      <SquareImage src={"http://127.0.0.1:8000"+item[column.key]} alt={item.name} />
                     ) : column.key === "selling_price" ? (
                       `₹ ${item[column.key]}`
                     ) : (
