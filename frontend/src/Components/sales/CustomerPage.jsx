@@ -21,6 +21,9 @@ const CustomerPage = () => {
     email: '',
     phone_number: '',
     address: '',
+    state: '',
+    city: '',
+    pincode: '',
   });
   const [errors, setErrors] = useState({});
   const [states, setStates] = useState([]);
@@ -35,6 +38,7 @@ const CustomerPage = () => {
     try {
       const response = await api.get('/customers/');  
       setCustomers(response.data);
+      console.log('Fetched customers:', response.data); // Add this line for debugging
     } catch (error) {
       console.error('Error fetching customers:', error);
     }
@@ -80,6 +84,9 @@ const CustomerPage = () => {
       email: '',
       phone_number: '',
       address: '',
+      state: '',
+      city: '',
+      pincode: '',
     });
     setErrors({});
   };
@@ -100,6 +107,9 @@ const CustomerPage = () => {
     tempErrors.email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newCustomer.email) ? "" : "Email is not valid";
     tempErrors.phone_number = /^[6-9]\d{9}$/.test(newCustomer.phone_number) ? "" : "Phone number is not valid";
     tempErrors.address = newCustomer.address ? "" : "Address is required";
+    tempErrors.state = newCustomer.state ? "" : "State is required";
+    tempErrors.city = newCustomer.city ? "" : "City is required";
+    tempErrors.pincode = /^\d{6}$/.test(newCustomer.pincode) ? "" : "Pincode must be 6 digits";
 
     setErrors(tempErrors);
     return Object.values(tempErrors).every(x => x === "");
@@ -108,7 +118,12 @@ const CustomerPage = () => {
   const handleAddCustomer = async () => {
     if (validateForm()) {
       try {
-        const response = await api.post('/customers/', newCustomer);
+        const customerData = {
+          ...newCustomer,
+          state: states.find(state => state.state_id === parseInt(newCustomer.state))?.state_name,
+          city: cities.find(city => city.district_id === parseInt(newCustomer.city))?.district_name,
+        };
+        const response = await api.post('/customers/', customerData);
         if (response.data) {
           setCustomers(prevCustomers => [...prevCustomers, response.data]);
           handleCloseModal();
@@ -188,12 +203,15 @@ const CustomerPage = () => {
               <TableCell sx={{ fontWeight: 'bold' }}>EMAIL</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>PHONE NUMBER</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>ADDRESS</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>STATE</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>CITY</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>PINCODE</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {customers.map((customer) => (
               <TableRow
-                key={customer.id}
+                key={customer.customer_id}
                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
               >
                 <TableCell padding="checkbox">
@@ -203,6 +221,9 @@ const CustomerPage = () => {
                 <TableCell>{customer.email}</TableCell>
                 <TableCell>{customer.phone_number}</TableCell>
                 <TableCell>{customer.address}</TableCell>
+                <TableCell>{customer.state}</TableCell>
+                <TableCell>{customer.city}</TableCell>
+                <TableCell>{customer.pincode}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -281,6 +302,56 @@ const CustomerPage = () => {
                 rows={3}
                 error={!!errors.address}
                 helperText={errors.address}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <FormControl fullWidth error={!!errors.state}>
+                <InputLabel>State</InputLabel>
+                <Select
+                  name="state"
+                  value={newCustomer.state}
+                  onChange={handleInputChange}
+                  label="State"
+                >
+                  {states.map((state) => (
+                    <MenuItem key={state.state_id} value={state.state_id}>
+                      {state.state_name}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {errors.state && <FormHelperText>{errors.state}</FormHelperText>}
+              </FormControl>
+            </Grid>
+            <Grid item xs={6}>
+              <FormControl fullWidth error={!!errors.city}>
+                <InputLabel>City</InputLabel>
+                <Select
+                  name="city"
+                  value={newCustomer.city}
+                  onChange={handleInputChange}
+                  label="City"
+                  disabled={!newCustomer.state}
+                >
+                  {cities.map((city) => (
+                    <MenuItem key={city.district_id} value={city.district_id}>
+                      {city.district_name}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {errors.city && <FormHelperText>{errors.city}</FormHelperText>}
+              </FormControl>
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                fullWidth
+                label="Pincode"
+                name="pincode"
+                value={newCustomer.pincode}
+                onChange={handleInputChange}
+                variant="outlined"
+                error={!!errors.pincode}
+                helperText={errors.pincode}
+                inputProps={{ maxLength: 6 }}
               />
             </Grid>
           </Grid>

@@ -50,7 +50,6 @@ function ItemPage() {
       const res = await api.get('/token/items/')
  
       setItems(res.data)
-      console.log(res.data)
        
       
   } catch (error) {

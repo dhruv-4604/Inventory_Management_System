@@ -4,7 +4,7 @@ from rest_framework.permissions import AllowAny,IsAuthenticated
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractBaseUser
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from .serializers import CustomUserSerializer, CustomTokenObtainPairSerializer
+from .serializers import CustomUserSerializer, CustomTokenObtainPairSerializer, ShipmentSerializer
 
 User = get_user_model()
 
@@ -102,18 +102,30 @@ class CustomerListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        customers = Customer.objects.all()
+        customers = Customer.objects.filter(user=request.user)
         serializer = CustomerSerializer(customers, many=True)
         return Response(serializer.data)
 
     def post(self, request):
-        customer_id = request.data.get('customer_id')
         request.data['user'] = request.user.id
         serializer = CustomerSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request):
+        customer_id = request.data.get('customer_id')
+        if not customer_id:
+            return Response({"error": "customer_id is required for updating a customer"}, status=status.HTTP_400_BAD_REQUEST)
+
+        customer = get_object_or_404(Customer, customer_id=customer_id, user=request.user)
+        serializer = CustomerSerializer(customer, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 from .models import Vendor
 from .serializers import VendorSerializer
@@ -166,6 +178,20 @@ class SaleOrderView(APIView):
                     # If there's not enough stock, delete the created sale order and return an error
                     sale_order.delete()
                     return Response({"error": f"Not enough stock for item {item.name}"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Create shipment if mode_of_delivery is 'DELIVERY'
+            if data['mode_of_delivery'] == 'DELIVERY':
+                shipment_data = {
+                    'order_id': sale_order.sale_order_id,
+                    'customer_name': sale_order.customer_name,
+                    'carrier': sale_order.carrier,
+                }
+                shipment_serializer = ShipmentSerializer(data=shipment_data)
+                if shipment_serializer.is_valid():
+                    shipment_serializer.save()
+                else:
+                    # If there's an error creating the shipment, log it but don't prevent the sale order from being created
+                    print(f"Error creating shipment: {shipment_serializer.errors}")
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -226,4 +252,32 @@ class PurchaseOrderView(APIView):
         purchase_order.save()
 
         serializer = PurchaseOrderSerializer(purchase_order)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from .models import Shipment
+from .serializers import ShipmentSerializer
+
+class ShipmentListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Fetch all shipments
+        shipments = Shipment.objects.all()
+        serializer = ShipmentSerializer(shipments, many=True)
+        return Response(serializer.data)
+
+    def put(self, request, shipment_id):
+        # Update shipment status
+        shipment = get_object_or_404(Shipment, shipment_id=shipment_id)
+        data = request.data.copy()
+        
+        # Update only the status field
+        shipment.status = data.get('status', shipment.status)
+        shipment.save()
+
+        serializer = ShipmentSerializer(shipment)
         return Response(serializer.data, status=status.HTTP_200_OK)

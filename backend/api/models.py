@@ -2,6 +2,12 @@ from datetime import timezone
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from django.core.validators import MinValueValidator
+import random
+import string
+from django.core.validators import MinLengthValidator
+
+def generate_tracking_id():
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=11))
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -73,6 +79,9 @@ class Customer(models.Model):
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=15)
     address = models.TextField()
+    state = models.CharField(max_length=100)  # New field
+    city = models.CharField(max_length=100)   # New field
+    pincode = models.CharField(max_length=6)  # New field
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='customers')
 
     def __str__(self):
@@ -114,6 +123,9 @@ class SaleOrder(models.Model):
     discount = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
     user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='sale_orders')
+    customer_state = models.CharField(max_length=100, default='None')
+    customer_city = models.CharField(max_length=100, default='None')
+    customer_pincode = models.CharField(max_length=6, default='None')
 
     def __str__(self):
         return f"Sale Order {self.sale_order_id} - {self.customer_name}"
@@ -153,3 +165,21 @@ class PurchaseOrderItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} x Item {self.item_id} for Purchase Order {self.purchase_order.purchase_order_id}"
+
+class Shipment(models.Model):
+    STATUS_CHOICES = [
+        ('IN_TRANSIT', 'In Transit'),
+        ('DELIVERED', 'Delivered'),
+        ('RETURNED', 'Returned'),
+    ]
+
+    shipment_id = models.AutoField(primary_key=True)
+    date = models.DateTimeField(auto_now_add=True)
+    order_id = models.IntegerField()
+    customer_name = models.CharField(max_length=255)
+    carrier = models.CharField(max_length=50)
+    tracking_id = models.CharField(max_length=11, unique=True, default=generate_tracking_id, validators=[MinLengthValidator(11)])
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='IN_TRANSIT')
+
+    def __str__(self):
+        return f"Shipment {self.shipment_id} for Order {self.order_id}"

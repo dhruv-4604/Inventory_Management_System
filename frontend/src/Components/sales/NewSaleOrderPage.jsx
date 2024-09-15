@@ -12,12 +12,14 @@ const CustomerForm = ({ customers, order, onOrderChange }) => {
       <Autocomplete
         options={customers}
         getOptionLabel={(option) => option.name}
-      
         onChange={(event, newValue) => {
           onOrderChange('customerId', newValue?.customer_id || null);
           onOrderChange('customerName', newValue?.name || '');
           onOrderChange('phoneNumber', newValue?.phone_number || '');
           onOrderChange('address', newValue?.address || '');
+          onOrderChange('state', newValue?.state || '');
+          onOrderChange('city', newValue?.city || '');
+          onOrderChange('pincode', newValue?.pincode || '');
         }}
         renderInput={(params) => <TextField {...params} label="Customer" fullWidth />}
       />
@@ -33,6 +35,27 @@ const CustomerForm = ({ customers, order, onOrderChange }) => {
         label="Address"
         value={order.address}
         onChange={(e) => onOrderChange('address', e.target.value)}
+        margin="normal"
+      />
+      <TextField
+        fullWidth
+        label="State"
+        value={order.state}
+        onChange={(e) => onOrderChange('state', e.target.value)}
+        margin="normal"
+      />
+      <TextField
+        fullWidth
+        label="City"
+        value={order.city}
+        onChange={(e) => onOrderChange('city', e.target.value)}
+        margin="normal"
+      />
+      <TextField
+        fullWidth
+        label="Pincode"
+        value={order.pincode}
+        onChange={(e) => onOrderChange('pincode', e.target.value)}
         margin="normal"
       />
       <FormControl fullWidth margin="normal">
@@ -177,6 +200,9 @@ const NewSaleOrderPage = () => {
     phoneNumber: '',
     orderMode: 'AT SHOP',
     address: '',
+    state: '',
+    city: '',
+    pincode: '',
     courierPartner: '',
     paymentStatus: 'Due',
     discount: 0
@@ -257,11 +283,27 @@ const NewSaleOrderPage = () => {
     return subtotal - order.discount;
   };
 
+  const isOrderValid = () => {
+    return (
+      order.customerId && // Check if a customer is selected
+      orderItems.some(item => item.item && item.quantity > 0) // Check if at least one item is added
+    );
+  };
+
   const handleSaveOrder = async () => {
+    if (!isOrderValid()) {
+      // You might want to show an error message to the user here
+      console.error('Cannot save order: Please select a customer and add at least one item.');
+      return;
+    }
+
     const orderData = {
       customer_id: order.customerId || 0,
       customer_name: order.customerName,
       customer_address: order.address,
+      customer_state: order.state,
+      customer_city: order.city,
+      customer_pincode: order.pincode,
       mode_of_delivery: order.orderMode === 'AT SHOP' ? 'PICKUP' : 'DELIVERY',
       carrier: order.courierPartner || 'OTHER',
       payment: order.paymentStatus === 'Paid',
@@ -313,7 +355,11 @@ const NewSaleOrderPage = () => {
         </Grid>
       </Grid>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-        <Button variant="contained" onClick={handleSaveOrder}>
+        <Button 
+          variant="contained" 
+          onClick={handleSaveOrder}
+          disabled={!isOrderValid()}
+        >
           Save Order
         </Button>
       </Box>

@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractBaseUser
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import Item,Customer,Vendor,SaleOrder, SaleOrderItem,PurchaseOrder,PurchaseOrderItem
+from .models import Item,Customer,Vendor,SaleOrder, SaleOrderItem,PurchaseOrder,PurchaseOrderItem, Shipment
 
 User = get_user_model()
 
@@ -47,7 +47,7 @@ class ItemSerializer(serializers.ModelSerializer):
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
-        fields = ['customer_id', 'name', 'email', 'phone_number', 'address', 'user']
+        fields = ['customer_id', 'name', 'email', 'phone_number', 'address', 'state', 'city', 'pincode', 'user']
         read_only_fields = ['customer_id']
 
     def create(self, validated_data):
@@ -76,7 +76,9 @@ class SaleOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SaleOrder
-        fields = ['sale_order_id', 'date', 'customer_id', 'customer_name', 'customer_address', 'mode_of_delivery', 'carrier', 'payment_received', 'items', 'discount', 'total_amount', 'user']
+        fields = ['sale_order_id', 'date', 'customer_id', 'customer_name', 'customer_address', 
+                  'customer_state', 'customer_city', 'customer_pincode', 'mode_of_delivery', 
+                  'carrier', 'payment_received', 'items', 'discount', 'total_amount', 'user']
         read_only_fields = ['sale_order_id', 'date']
 
     def create(self, validated_data):
@@ -107,5 +109,13 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
         for item_data in items_data:
             PurchaseOrderItem.objects.create(purchase_order=purchase_order, **item_data)
         return purchase_order
+
+
+
+class ShipmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Shipment
+        fields = ['shipment_id', 'date', 'order_id', 'customer_name', 'carrier', 'tracking_id', 'status']
+        read_only_fields = ['shipment_id', 'date', 'tracking_id']
 
 

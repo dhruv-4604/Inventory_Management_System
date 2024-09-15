@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import {
   Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Button, TextField, InputAdornment, Typography, TablePagination
@@ -6,17 +7,12 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import SortIcon from '@mui/icons-material/Sort';
 import AddIcon from '@mui/icons-material/Add';
-
-// Mock data for shipments
-const mockShipments = [
-  { id: 1, createdAt: '2023-05-01', orderNumber: 'ORD-001', customerName: 'John Doe', carrier: 'FedEx', trackingId: 'FDX123456789', status: 'In Transit' },
-  { id: 2, createdAt: '2023-05-02', orderNumber: 'ORD-002', customerName: 'Jane Smith', carrier: 'UPS', trackingId: 'UPS987654321', status: 'Delivered' },
-  { id: 3, createdAt: '2023-05-03', orderNumber: 'ORD-003', customerName: 'Bob Johnson', carrier: 'DHL', trackingId: 'DHL246813579', status: 'Processing' },
-  // Add more mock data as needed
-];
+import api from '../../api';
 
 const ShipmentsPage = () => {
-  const [shipments, setShipments] = useState(mockShipments);
+  const [shipments, setShipments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -35,8 +31,24 @@ const ShipmentsPage = () => {
     height: '36px',
   };
 
+  useEffect(() => {
+    fetchShipments();
+  }, []);
+
+  const fetchShipments = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('token/shipments/');
+      setShipments(response.data);
+      setLoading(false);
+    } catch (err) {
+      setError('Failed to fetch shipments');
+      setLoading(false);
+    }
+  };
+
   const handleSearch = () => {
-    const filteredShipments = mockShipments.filter(shipment => 
+    const filteredShipments = shipments.filter(shipment => 
       shipment.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       shipment.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       shipment.trackingId.toLowerCase().includes(searchTerm.toLowerCase())
@@ -59,6 +71,9 @@ const ShipmentsPage = () => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
+
+  if (loading) return <Typography>Loading...</Typography>;
+  if (error) return <Typography color="error">{error}</Typography>;
 
   return (
     <Box sx={{ width: '100%', p: 2 }}>
@@ -109,8 +124,8 @@ const ShipmentsPage = () => {
         <Table sx={{ minWidth: 650 }} aria-label="shipments table">
           <TableHead>
             <TableRow sx={{ backgroundColor: '#F9FAFB' }}>
-              <TableCell sx={{ fontWeight: 'bold' }}>CREATED DATE</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>ORDER NUMBER</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>DATE</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>ORDER ID</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>CUSTOMER NAME</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>CARRIER</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>TRACKING ID</TableCell>
@@ -122,14 +137,14 @@ const ShipmentsPage = () => {
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((shipment) => (
                 <TableRow
-                  key={shipment.id}
+                  key={shipment.shipment_id}
                   sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                 >
-                  <TableCell>{new Date(shipment.createdAt).toLocaleDateString()}</TableCell>
-                  <TableCell>{shipment.orderNumber}</TableCell>
-                  <TableCell>{shipment.customerName}</TableCell>
+                  <TableCell>{new Date(shipment.date).toLocaleDateString()}</TableCell>
+                  <TableCell>{shipment.order_id}</TableCell>
+                  <TableCell>{shipment.customer_name}</TableCell>
                   <TableCell>{shipment.carrier}</TableCell>
-                  <TableCell>{shipment.trackingId}</TableCell>
+                  <TableCell>{shipment.tracking_id}</TableCell>
                   <TableCell>{shipment.status}</TableCell>
                 </TableRow>
               ))}
@@ -137,14 +152,7 @@ const ShipmentsPage = () => {
         </Table>
       </TableContainer>
 
-      <TablePagination
-        component="div"
-        count={shipments.length}
-        page={page}
-        onPageChange={handleChangePage}
-        rowsPerPage={rowsPerPage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-      />
+     
     </Box>
   );
 };
