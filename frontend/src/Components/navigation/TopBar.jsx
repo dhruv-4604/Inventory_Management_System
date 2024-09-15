@@ -1,12 +1,15 @@
 // TopBar.js
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   AppBar, 
   Toolbar, 
   Typography, 
   IconButton, 
   Button,
-  Box
+  Box,
+  Badge,
+  Menu,
+  MenuItem,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { 
@@ -30,6 +33,21 @@ const StyledAppBar = styled(AppBar)(({ theme }) => ({
 }));
 
 function TopBar({ title }) {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [notifications, setNotifications] = useState([
+    { id: 1, message: 'New shipment arrived' },
+    { id: 2, message: 'Low stock alert: Item XYZ' },
+    { id: 3, message: 'Pending order: #12345' },
+  ]);
+
+  const handleNotificationClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleNotificationClose = () => {
+    setAnchorEl(null);
+  };
+
   return (
     <StyledAppBar position="fixed">
       <Toolbar>
@@ -37,9 +55,22 @@ function TopBar({ title }) {
           {title}
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <IconButton color="inherit" sx={{ mr: 2 }}>
-            <NotificationsIcon color='#232619'/>
+          <IconButton color="inherit" sx={{ mr: 2 }} onClick={handleNotificationClick}>
+            <Badge badgeContent={notifications.length} color="error">
+              <NotificationsIcon color='#232619'/>
+            </Badge>
           </IconButton>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleNotificationClose}
+          >
+            {notifications.map((notification) => (
+              <MenuItem key={notification.id} onClick={handleNotificationClose}>
+                {notification.message}
+              </MenuItem>
+            ))}
+          </Menu>
           <Button
             variant="contained"
             startIcon={<AddIcon />}

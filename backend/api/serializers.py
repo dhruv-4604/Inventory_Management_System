@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractBaseUser
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import Item,Customer,Vendor,SaleOrder, SaleOrderItem,PurchaseOrder,PurchaseOrderItem, Shipment
+from .models import Item,Customer,Vendor,SaleOrder, SaleOrderItem,PurchaseOrder,PurchaseOrderItem, Shipment, Company
 
 User = get_user_model()
 
@@ -117,5 +117,12 @@ class ShipmentSerializer(serializers.ModelSerializer):
         model = Shipment
         fields = ['shipment_id', 'date', 'order_id', 'customer_name', 'carrier', 'tracking_id', 'status']
         read_only_fields = ['shipment_id', 'date', 'tracking_id']
+
+
+
+class CompanySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = ['company_name', 'gst_number', 'phone_number', 'address', 'city', 'state', 'pincode', 'bank_name', 'bank_account_number', 'ifsc_code']
 
 

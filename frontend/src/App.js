@@ -27,6 +27,7 @@ import VendorsPage from "./Components/purchase/VendorsPage.jsx";
 import ProtectedRoute from "./ProtectedRoute.jsx";
 import NewSaleOrderPage from "./Components/sales/NewSaleOrderPage";
 import NewPurchaseOrderPage from "./Components/purchase/NewPurchaseOrderPage.jsx";
+import Settings from "./Components/settings/Settings.jsx";
 
 const theme = createTheme({
   typography: {
@@ -63,6 +64,9 @@ function MainContent() {
     if (location.pathname.includes("/sales/shipments")) return "Shipments";
     if (location.pathname.includes("/sales")) return "Sales";
     if (location.pathname.includes("/dashboard")) return "Dashboard";
+    if (location.pathname.includes("/Purchases/Purchase_Orders"))
+      return "Purchase Orders";
+    if (location.pathname.includes("/Purchases/vendors")) return "Vendors";
     // Add more conditions for other routes
     return "SupplySync";
   };
@@ -121,6 +125,7 @@ function App() {
             <Route path="/signin" element={<SignInPage />} />
             <Route path="/signup" element={<SignUpPage />} />
             <Route path="*" element={<MainContent />} />
+            <Route path="/settings" element={<Settings />} />
           </Routes>
         </Box>
       </Router>

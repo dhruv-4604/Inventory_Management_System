@@ -137,7 +137,7 @@ function Sidebar() {
       { text: 'Purchase Orders', to: 'Purchase_Orders' },
       { text: 'Vendors', to: 'vendors' }
     ] },
-    { icon: <SettingsIcon />, text: 'Settings', to: '/Settings' },
+    { icon: <SettingsIcon />, text: 'Settings', to: '/settings' },
   ];
 
   // Effect to expand the correct item based on the current route

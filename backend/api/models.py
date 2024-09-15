@@ -183,3 +183,19 @@ class Shipment(models.Model):
 
     def __str__(self):
         return f"Shipment {self.shipment_id} for Order {self.order_id}"
+
+class Company(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='company')
+    company_name = models.CharField(max_length=255)
+    gst_number = models.CharField(max_length=15, blank=True, null=True)
+    phone_number = models.CharField(max_length=15)
+    address = models.TextField()
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    pincode = models.CharField(max_length=6)
+    bank_name = models.CharField(max_length=255, blank=True, null=True)
+    bank_account_number = models.CharField(max_length=20, blank=True, null=True)
+    ifsc_code = models.CharField(max_length=11, blank=True, null=True)
+
+    def __str__(self):
+        return self.company_name
