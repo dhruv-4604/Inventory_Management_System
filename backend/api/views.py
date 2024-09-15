@@ -134,3 +134,54 @@ class VendorListView(APIView):
            serializer.save()
            return Response(serializer.data, status=status.HTTP_201_CREATED)
        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from .models import SaleOrder, Item
+from .serializers import SaleOrderSerializer
+
+class SaleOrderView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # Add user to the data
+        data = request.data.copy()
+        data['user'] = request.user.id
+        data['payment_received'] = data.pop('payment', False)  # Rename 'payment' to 'payment_received'
+
+        serializer = SaleOrderSerializer(data=data)
+        if serializer.is_valid():
+            # Create the sale order
+            sale_order = serializer.save()
+
+            # Update item quantities
+            for item_data in data['items']:
+                item = Item.objects.get(item_id=item_data['item_id'])
+                if item.quantity >= item_data['quantity']:
+                    item.quantity -= item_data['quantity']
+                    item.save()
+                else:
+                    # If there's not enough stock, delete the created sale order and return an error
+                    sale_order.delete()
+                    return Response({"error": f"Not enough stock for item {item.name}"}, status=status.HTTP_400_BAD_REQUEST)
+
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request):
+        sale_orders = SaleOrder.objects.filter(user=request.user)
+        serializer = SaleOrderSerializer(sale_orders, many=True)
+        return Response(serializer.data)
+
+    def put(self, request, sale_order_id):
+        sale_order = get_object_or_404(SaleOrder, sale_order_id=sale_order_id, user=request.user)
+        data = request.data.copy()
+        
+        # Update only the payment_received field
+        sale_order.payment_received = data.get('payment_received', sale_order.payment_received)
+        sale_order.save()
+
+        serializer = SaleOrderSerializer(sale_order)
+        return Response(serializer.data, status=status.HTTP_200_OK)

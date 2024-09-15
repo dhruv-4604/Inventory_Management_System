@@ -87,3 +87,41 @@ class Vendor(models.Model):
 
     def __str__(self):
         return self.name
+
+class SaleOrder(models.Model):
+    DELIVERY_CHOICES = [
+        ('PICKUP', 'Pickup'),
+        ('DELIVERY', 'Delivery'),
+    ]
+
+    CARRIER_CHOICES = [
+        ('FEDEX', 'FedEx'),
+        ('UPS', 'UPS'),
+        ('USPS', 'USPS'),
+        ('DHL', 'DHL'),
+        ('OTHER', 'Other'),
+    ]
+
+    sale_order_id = models.AutoField(primary_key=True)
+    date = models.DateTimeField(auto_now_add=True)
+    customer_id = models.IntegerField(default=0)
+    customer_name = models.CharField(max_length=255, default='None')
+    customer_address = models.TextField(default='None')
+    mode_of_delivery = models.CharField(max_length=10, choices=DELIVERY_CHOICES)
+    carrier = models.CharField(max_length=10, choices=CARRIER_CHOICES)
+    payment_received = models.BooleanField(default=False)
+    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
+    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='sale_orders')
+
+    def __str__(self):
+        return f"Sale Order {self.sale_order_id} - {self.customer_name}"
+
+class SaleOrderItem(models.Model):
+    sale_order = models.ForeignKey(SaleOrder, on_delete=models.CASCADE, related_name='items')
+    item_id = models.IntegerField(default=0)
+    quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    rate = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+
+    def __str__(self):
+        return f"{self.quantity} x Item {self.item_id} for Sale Order {self.sale_order.sale_order_id}"

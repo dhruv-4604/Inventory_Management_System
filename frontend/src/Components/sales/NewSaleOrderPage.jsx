@@ -88,9 +88,34 @@ const OrderItemsTable = ({ orderItems, availableItems, onItemChange, onAddItem, 
               <TableCell>
                 <TextField
                   type="number"
-                  value={item.quantity || ''}
-                  onChange={(e) => onItemChange(index, 'quantity', parseInt(e.target.value) || 0)}
-                  InputProps={{ inputProps: { min: 1, max:item.quantity } }}
+                  value={item.quantity}
+                  onChange={(e) => {
+                    const newValue = parseInt(e.target.value) || 0;
+                    const maxQuantity = item.item?.quantity || 0;
+                    onItemChange(index, 'quantity', Math.min(newValue, maxQuantity));
+                  }}
+                  onKeyDown={(e) => {
+                    const maxQuantity = item.item?.quantity || 0;
+                    const currentValue = e.target.value;
+                    const key = e.key;
+
+                    if (
+                      key !== 'Backspace' &&
+                      key !== 'ArrowLeft' &&
+                      key !== 'ArrowRight' &&
+                      key !== 'Delete' &&
+                      key !== 'Tab'
+                    ) {
+                      const newValue = currentValue + key;
+                      if (parseInt(newValue) > maxQuantity) {
+                        e.preventDefault();
+                      }
+                    }
+                  }}
+                  inputProps={{
+                    min: 1,
+                    max: item.item?.quantity || 0,
+                  }}
                 />
               </TableCell>
               <TableCell>
@@ -234,35 +259,31 @@ const NewSaleOrderPage = () => {
 
   const handleSaveOrder = async () => {
     const orderData = {
-      customerId: order.customerId,
-      customerName: order.customerName,
-      customerAddress: order.address,
-      modeOfDelivery: order.orderMode,
-      carrier: order.courierPartner,
+      customer_id: order.customerId || 0,
+      customer_name: order.customerName,
+      customer_address: order.address,
+      mode_of_delivery: order.orderMode === 'AT SHOP' ? 'PICKUP' : 'DELIVERY',
+      carrier: order.courierPartner || 'OTHER',
       payment: order.paymentStatus === 'Paid',
-      items: orderItems.map(({ item, quantity }) => ({
-        itemId: item.item_id,
+      items: orderItems.filter(item => item.item && item.quantity).map(({ item, quantity }) => ({
+        item_id: item.item_id,
         quantity,
         rate: item.selling_price
       })),
-      discount: order.discount,
-      totalAmount: calculateTotal()
+      discount: order.discount || 0,
+      total_amount: calculateTotal()
     };
 
-    // Console log the final data
     console.log('Order data to be sent to backend:', orderData);
 
-    // Redirect to the sales order page
-    navigate('/sales/sale_orders');
-
-    // The following code is commented out as the backend is not implemented yet
-    // try {
-    //   await api.post('/orders/', orderData);
-    //   navigate('/sales/sale_orders');
-    // } catch (error) {
-    //   console.error('Error saving order:', error);
-    //   // Handle error (e.g., show error message to user)
-    // }
+    try {
+      const response = await api.post('/token/saleorders/', orderData);
+      console.log('Server response:', response.data);
+      navigate('/sales/sale_orders');
+    } catch (error) {
+      console.error('Error saving order:', error.response ? error.response.data : error.message);
+      // Handle error (e.g., show error message to user)
+    }
   };
 
   return (

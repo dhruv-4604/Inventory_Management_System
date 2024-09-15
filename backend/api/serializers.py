@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractBaseUser
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import Item,Customer,Vendor
+from .models import Item,Customer,Vendor,SaleOrder, SaleOrderItem
 
 User = get_user_model()
 
@@ -63,5 +63,27 @@ class VendorSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return Vendor.objects.create(**validated_data)
+
+
+
+class SaleOrderItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SaleOrderItem
+        fields = ['item_id', 'quantity', 'rate']
+
+class SaleOrderSerializer(serializers.ModelSerializer):
+    items = SaleOrderItemSerializer(many=True)
+
+    class Meta:
+        model = SaleOrder
+        fields = ['sale_order_id', 'date', 'customer_id', 'customer_name', 'customer_address', 'mode_of_delivery', 'carrier', 'payment_received', 'items', 'discount', 'total_amount', 'user']
+        read_only_fields = ['sale_order_id', 'date']
+
+    def create(self, validated_data):
+        items_data = validated_data.pop('items')
+        sale_order = SaleOrder.objects.create(**validated_data)
+        for item_data in items_data:
+            SaleOrderItem.objects.create(sale_order=sale_order, **item_data)
+        return sale_order
 
 
