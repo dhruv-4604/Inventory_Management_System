@@ -185,3 +185,45 @@ class SaleOrderView(APIView):
 
         serializer = SaleOrderSerializer(sale_order)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+from .models import PurchaseOrder, Item
+from .serializers import PurchaseOrderSerializer
+
+class PurchaseOrderView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # Add user to the data
+        data = request.data.copy()
+        data['user'] = request.user.id
+
+        serializer = PurchaseOrderSerializer(data=data)
+        if serializer.is_valid():
+            # Create the purchase order
+            purchase_order = serializer.save()
+
+            # Update item quantities
+            for item_data in data['items']:
+                item = Item.objects.get(item_id=item_data['item_id'])
+                item.quantity += item_data['quantity']
+                item.save()
+
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request):
+        purchase_orders = PurchaseOrder.objects.filter(user=request.user)
+        serializer = PurchaseOrderSerializer(purchase_orders, many=True)
+        return Response(serializer.data)
+
+    def put(self, request, purchase_order_id):
+        purchase_order = get_object_or_404(PurchaseOrder, purchase_order_id=purchase_order_id, user=request.user)
+        data = request.data.copy()
+        
+        # Update only the payment_status field
+        purchase_order.payment_status = data.get('payment_status', purchase_order.payment_status)
+        purchase_order.save()
+
+        serializer = PurchaseOrderSerializer(purchase_order)
+        return Response(serializer.data, status=status.HTTP_200_OK)

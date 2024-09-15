@@ -35,6 +35,7 @@ const VendorsPage = () => {
     name: '',
     email: '',
     phone_number: '',
+    address: '',  // New field
   });
 
   useEffect(() => {
@@ -70,6 +71,7 @@ const VendorsPage = () => {
       name: '',
       email: '',
       phone_number: '',
+      address: '',  // New field
     });
   };
 
@@ -148,6 +150,7 @@ const VendorsPage = () => {
               <TableCell>NAME</TableCell>
               <TableCell>EMAIL</TableCell>
               <TableCell>PHONE NUMBER</TableCell>
+              <TableCell>ADDRESS</TableCell>  {/* New column */}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -159,6 +162,7 @@ const VendorsPage = () => {
                 <TableCell>{vendor.name}</TableCell>
                 <TableCell>{vendor.email}</TableCell>
                 <TableCell>{vendor.phone_number}</TableCell>
+                <TableCell>{vendor.address}</TableCell>  {/* New cell */}
               </TableRow>
             ))}
           </TableBody>
@@ -186,6 +190,14 @@ const VendorsPage = () => {
               value={newVendor.phone_number}
               onChange={(e) => setNewVendor({ ...newVendor, phone_number: e.target.value })}
               fullWidth
+            />
+            <TextField
+              label="Address"
+              value={newVendor.address}
+              onChange={(e) => setNewVendor({ ...newVendor, address: e.target.value })}
+              fullWidth
+              multiline
+              rows={3}
             />
           </Box>
         </DialogContent>

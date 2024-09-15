@@ -13,34 +13,25 @@ const VendorForm = ({ vendors, order, onOrderChange }) => {
         options={vendors}
         getOptionLabel={(option) => option.name}
         onChange={(event, newValue) => {
-          onOrderChange('vendorId', newValue?.vendor_id || null);
-          onOrderChange('vendorName', newValue?.name || '');
-          onOrderChange('phoneNumber', newValue?.phone_number || '');
-          onOrderChange('address', newValue?.address || '');
+          onOrderChange('vendor_id', newValue?.vendor_id || 0);
+          onOrderChange('vendor_name', newValue?.name || '');
+          onOrderChange('vendor_address', newValue?.address || '');
+          onOrderChange('vendor_phone', newValue?.phone_number || '');
         }}
         renderInput={(params) => <TextField {...params} label="Vendor" fullWidth />}
       />
       <TextField
         fullWidth
-        label="Phone Number"
-        value={order.phoneNumber}
-        onChange={(e) => onOrderChange('phoneNumber', e.target.value)}
+        label="Vendor Address"
+        value={order.vendor_address}
+        onChange={(e) => onOrderChange('vendor_address', e.target.value)}
         margin="normal"
       />
       <TextField
         fullWidth
-        label="Address"
-        value={order.address}
-        onChange={(e) => onOrderChange('address', e.target.value)}
-        margin="normal"
-      />
-      <TextField
-        fullWidth
-        label="Expected Delivery Date"
-        type="date"
-        value={order.expectedDeliveryDate}
-        onChange={(e) => onOrderChange('expectedDeliveryDate', e.target.value)}
-        InputLabelProps={{ shrink: true }}
+        label="Vendor Phone"
+        value={order.vendor_phone}
+        onChange={(e) => onOrderChange('vendor_phone', e.target.value)}
         margin="normal"
       />
     </Box>
@@ -71,7 +62,7 @@ const OrderItemsTable = ({ orderItems, availableItems, onItemChange, onAddItem, 
                   onChange={(event, newValue) => onItemChange(index, 'item', newValue)}
                   renderInput={(params) => <TextField {...params} />}
                   fullWidth
-                  isOptionEqualToValue={(option, value) => option.id === value.id}
+                  isOptionEqualToValue={(option, value) => option.item_id === value.item_id}
                 />
               </TableCell>
               <TableCell>
@@ -117,7 +108,7 @@ const OrderSummary = ({ order, onOrderChange, total }) => {
           value={order.paymentStatus}
           onChange={(e) => onOrderChange('paymentStatus', e.target.value)}
         >
-          <MenuItem value="Unpaid">Unpaid</MenuItem>
+          <MenuItem value="Due">Due</MenuItem>
           <MenuItem value="Paid">Paid</MenuItem>
         </Select>
       </FormControl>
@@ -131,12 +122,11 @@ const NewPurchaseOrderPage = () => {
   const [vendors, setVendors] = useState([]);
   const [orderItems, setOrderItems] = useState([]);
   const [order, setOrder] = useState({
-    vendorId: null,
-    vendorName: '',
-    phoneNumber: '',
-    address: '',
-    expectedDeliveryDate: '',
-    paymentStatus: 'Unpaid'
+    vendor_id: 0,
+    vendor_name: '',
+    vendor_address: '',
+    vendor_phone: '',
+    paymentStatus: 'Due',
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -150,11 +140,9 @@ const NewPurchaseOrderPage = () => {
           api.get('/token/items/'),
           api.get('/token/vendors/')
         ]);
-        console.log('Items fetched:', itemsResponse.data);
-        console.log('Vendors fetched:', vendorsResponse.data);
         setAvailableItems(itemsResponse.data);
         setVendors(vendorsResponse.data);
-        setOrderItems([{ item: null, quantity: 1, rate: 0, amount: 0 }]);
+        setOrderItems([{ item: null, quantity: 1, rate: 0 }]);
       } catch (error) {
         console.error('Error fetching data:', error);
         setError('Failed to fetch data. Please try again.');
@@ -173,19 +161,12 @@ const NewPurchaseOrderPage = () => {
     setOrderItems(prevItems => {
       const newItems = [...prevItems];
       newItems[index] = { ...newItems[index], [field]: value };
-      
-      const item = newItems[index].item;
-      const quantity = newItems[index].quantity || 0;
-      const rate = newItems[index].rate || 0;
-      
-      newItems[index].amount = quantity * rate;
-      
       return newItems;
     });
   };
 
   const addOrderItem = () => {
-    setOrderItems(prevItems => [...prevItems, { item: null, quantity: 1, rate: 0, amount: 0 }]);
+    setOrderItems(prevItems => [...prevItems, { item: null, quantity: 1, rate: 0 }]);
   };
 
   const removeOrderItem = (index) => {
@@ -193,35 +174,32 @@ const NewPurchaseOrderPage = () => {
   };
 
   const calculateTotal = () => {
-    return orderItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+    return orderItems.reduce((sum, item) => sum + (item.quantity * item.rate || 0), 0);
   };
 
   const handleSaveOrder = async () => {
     const orderData = {
-      vendorId: order.vendorId,
-      vendorName: order.vendorName,
-      vendorAddress: order.address,
-      expectedDeliveryDate: order.expectedDeliveryDate,
-      paymentStatus: order.paymentStatus,
-      items: orderItems.map(({ item, quantity, rate }) => ({
-        itemId: item.item_id,
-        quantity,
-        rate
+      vendor_id: order.vendor_id,
+      vendor_name: order.vendor_name,
+      vendor_address: order.vendor_address,
+      vendor_phone: order.vendor_phone,
+      payment_status: order.paymentStatus === 'Paid' ? 'PAID' : 'UNPAID',
+      items: orderItems.filter(item => item.item && item.quantity).map(({ item, quantity, rate }) => ({
+        item_id: item.item_id,
+        quantity: parseInt(quantity),
+        rate: parseFloat(rate)
       })),
-      totalAmount: calculateTotal()
+      total_amount: calculateTotal()
     };
 
-    console.log('Purchase Order data to be sent to backend:', orderData);
-
-    navigate('/purchase/purchase_orders');
-
-    // Uncomment when backend is implemented
-    // try {
-    //   await api.post('/purchase-orders/', orderData);
-    //   navigate('/purchase/purchase_orders');
-    // } catch (error) {
-    //   console.error('Error saving purchase order:', error);
-    // }
+    try {
+      const response = await api.post('/token/purchaseorders/', orderData);
+      console.log('Purchase order saved successfully:', response.data);
+      navigate('/purchases/purchase_orders');
+    } catch (error) {
+      console.error('Error saving purchase order:', error.response ? error.response.data : error);
+      setError('Failed to save purchase order. Please check the form and try again.');
+    }
   };
 
   return (

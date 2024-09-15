@@ -83,6 +83,7 @@ class Vendor(models.Model):
     name = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=15)
+    address = models.TextField(default='None')
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='vendors')
 
     def __str__(self):
@@ -125,3 +126,30 @@ class SaleOrderItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} x Item {self.item_id} for Sale Order {self.sale_order.sale_order_id}"
+
+class PurchaseOrder(models.Model):
+    PAYMENT_CHOICES = [
+        ('UNPAID', 'Unpaid'),
+        ('PAID', 'Paid'),
+    ]
+
+    purchase_order_id = models.AutoField(primary_key=True)
+    date = models.DateTimeField(auto_now_add=True)
+    vendor_id = models.IntegerField(default=0)
+    vendor_name = models.CharField(max_length=255, default='None')
+    vendor_address = models.TextField(default='None')
+    payment_status = models.CharField(max_length=10, choices=PAYMENT_CHOICES, default='UNPAID')
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
+    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='purchase_orders')
+
+    def __str__(self):
+        return f"Purchase Order {self.purchase_order_id} - {self.vendor_name}"
+
+class PurchaseOrderItem(models.Model):
+    purchase_order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE, related_name='items')
+    item_id = models.IntegerField()
+    quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    rate = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+
+    def __str__(self):
+        return f"{self.quantity} x Item {self.item_id} for Purchase Order {self.purchase_order.purchase_order_id}"
