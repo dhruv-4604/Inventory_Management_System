@@ -27,6 +27,7 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
+import api from '../../api';
 
 const StyledCard = styled(Card)(({ theme }) => ({
   maxWidth: 280,
@@ -110,17 +111,24 @@ const AddItemsButton = styled(StyledButton)({
   },
 });
 
-const CategoryCard = ({ category, items, onAddItems }) => {
+const CategoryCard = ({ category, items, onItemsUpdated }) => {
   const [openProductsDialog, setOpenProductsDialog] = useState(false);
   const [openAddItemsDialog, setOpenAddItemsDialog] = useState(false);
   const [itemSearchTerm, setItemSearchTerm] = useState('');
   const [selectedItems, setSelectedItems] = useState([]);
 
+  const categoryItems = items.filter(item => item.category === category.id);
+  const uncategorizedItems = items.filter(item => item.category === null);
+
+  const availableItems = uncategorizedItems.filter(item => 
+    item.name.toLowerCase().includes(itemSearchTerm.toLowerCase())
+  );
+
   const handleOpenProductsDialog = () => setOpenProductsDialog(true);
   const handleCloseProductsDialog = () => setOpenProductsDialog(false);
 
   const handleOpenAddItemsDialog = () => {
-    setSelectedItems(items.filter(item => item.categoryId === category.id));
+    setSelectedItems([]);
     setOpenAddItemsDialog(true);
   };
 
@@ -132,25 +140,32 @@ const CategoryCard = ({ category, items, onAddItems }) => {
 
   const handleItemToggle = (item) => {
     setSelectedItems(prev => {
-      const currentIndex = prev.findIndex(i => i.id === item.id);
+      const currentIndex = prev.findIndex(i => i.item_id === item.item_id);
       if (currentIndex === -1) {
         return [...prev, item];
       } else {
-        return prev.filter(i => i.id !== item.id);
+        return prev.filter(i => i.item_id !== item.item_id);
       }
     });
   };
 
-  const handleAddItems = () => {
-    onAddItems(category.id, selectedItems);
-    handleCloseAddItemsDialog();
-  };
+  const handleAddItems = async () => {
+    try {
+      const updatedItems = [];
 
-  const categoryItems = items.filter(item => item.categoryId === category.id);
-  const availableItems = items.filter(item => 
-    item.categoryId !== category.id && 
-    item.name.toLowerCase().includes(itemSearchTerm.toLowerCase())
-  );
+      for (const item of selectedItems) {
+        item.category = category.id;
+        const response = await api.put(`/token/items/`, item);
+        updatedItems.push(response.data);
+      }
+
+      onItemsUpdated(updatedItems);
+      handleCloseAddItemsDialog();
+    } catch (error) {
+      console.error('Error updating items:', error);
+      // Handle error (e.g., show an error message to the user)
+    }
+  };
 
   return (
     <>
@@ -182,38 +197,41 @@ const CategoryCard = ({ category, items, onAddItems }) => {
 
       {/* Products Dialog */}
       <Dialog open={openProductsDialog} onClose={handleCloseProductsDialog} maxWidth="md" fullWidth>
-        <DialogTitle>{category.name} Products</DialogTitle>
+        <DialogTitle>{category.name} Products ({categoryItems.length})</DialogTitle>
         <DialogContent>
           <TableContainer component={Paper}>
             <Table>
               <TableHead>
                 <TableRow>
                   <TableCell>Name</TableCell>
-                  <TableCell>SKU</TableCell>
+                  <TableCell>Quantity</TableCell>
                   <TableCell align="right">Price</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {categoryItems.map((item) => (
-                  <TableRow key={item.id}>
+                  <TableRow key={item.item_id}>
                     <TableCell>{item.name}</TableCell>
-                    <TableCell>{item.sku}</TableCell>
-                    <TableCell align="right">${item.price}</TableCell>
+                    <TableCell>{item.quantity}</TableCell>
+                    <TableCell align="right">${item.selling_price}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </TableContainer>
         </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseProductsDialog}>Close</Button>
+        </DialogActions>
       </Dialog>
 
       {/* Add Items Dialog */}
       <Dialog open={openAddItemsDialog} onClose={handleCloseAddItemsDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>Add Items to {category.name}</DialogTitle>
+        <DialogTitle>Add Uncategorized Items to {category.name}</DialogTitle>
         <DialogContent>
           <TextField
             margin="dense"
-            label="Search Items"
+            label="Search Uncategorized Items"
             type="text"
             fullWidth
             value={itemSearchTerm}
@@ -228,16 +246,16 @@ const CategoryCard = ({ category, items, onAddItems }) => {
           />
           <List sx={{ maxHeight: 300, overflow: 'auto' }}>
             {availableItems.map((item) => (
-              <ListItem key={item.id} dense button onClick={() => handleItemToggle(item)}>
+              <ListItem key={item.item_id} dense button onClick={() => handleItemToggle(item)}>
                 <Checkbox
                   edge="start"
-                  checked={selectedItems.some(i => i.id === item.id)}
+                  checked={selectedItems.some(i => i.item_id === item.item_id)}
                   tabIndex={-1}
                   disableRipple
                 />
                 <ListItemText 
                   primary={item.name} 
-                  secondary={`SKU: ${item.sku}, Price: $${item.price}`}
+                  secondary={`Quantity: ${item.quantity}, Price: $${item.selling_price}`}
                 />
               </ListItem>
             ))}
@@ -245,13 +263,17 @@ const CategoryCard = ({ category, items, onAddItems }) => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseAddItemsDialog}>Cancel</Button>
-          <Button onClick={handleAddItems} sx={{
-            background: 'linear-gradient(90deg, #D1EA67, #A6F15A)',
-            color: '#232619',
-            '&:hover': {
+          <Button 
+            onClick={handleAddItems} 
+            disabled={selectedItems.length === 0}
+            sx={{
               background: 'linear-gradient(90deg, #D1EA67, #A6F15A)',
-            },
-          }}>
+              color: '#232619',
+              '&:hover': {
+                background: 'linear-gradient(90deg, #D1EA67, #A6F15A)',
+              },
+            }}
+          >
             Add Selected Items
           </Button>
         </DialogActions>

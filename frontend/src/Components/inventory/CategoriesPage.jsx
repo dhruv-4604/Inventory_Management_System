@@ -58,7 +58,7 @@ const CategoriesPage = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await api.get('http://localhost:8000/token/categories/');
+      const response = await api.get('/token/categories/');
       setCategories(response.data);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -67,7 +67,7 @@ const CategoriesPage = () => {
 
   const fetchItems = async () => {
     try {
-      const response = await api.get('http://localhost:8000/token/items/');
+      const response = await api.get('/token/items/');
       setItems(response.data);
     } catch (error) {
       console.error('Error fetching items:', error);
@@ -103,7 +103,7 @@ const CategoriesPage = () => {
 
   const fetchUncategorizedItems = async () => {
     try {
-      const response = await api.get('http://localhost:8000/token/items/');
+      const response = await api.get('/token/items/');
       const items = response.data.filter(item => item.category === null);
       setUncategorizedItems(items);
     } catch (error) {
@@ -124,7 +124,7 @@ const CategoriesPage = () => {
         formData.append('image', selectedFile);
       }
 
-      const response = await api.post('http://localhost:8000/token/categories/', formData, {
+      const response = await api.post('/token/categories/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -152,12 +152,13 @@ const CategoriesPage = () => {
       formData.append('category_id', categoryId);
       itemsToAdd.forEach(item => formData.append('item_ids', item.item_id));
 
-      await api.post('http://localhost:8000/token/categories/add_items/', formData);
+      await api.post('/token/categories/', formData);
       
       await fetchItems(); // Refresh items to update their categories
       await fetchCategories(); // Refresh categories to update top selling items
     } catch (error) {
       console.error('Error adding items to category:', error);
+      // Handle error (e.g., show an error message to the user)
     }
   };
 
@@ -167,6 +168,19 @@ const CategoriesPage = () => {
 
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
+  };
+
+  const handleItemsUpdated = (updatedItems) => {
+    setItems(prevItems => {
+      const newItems = [...prevItems];
+      updatedItems.forEach(updatedItem => {
+        const index = newItems.findIndex(item => item.item_id === updatedItem.item_id);
+        if (index !== -1) {
+          newItems[index] = updatedItem;
+        }
+      });
+      return newItems;
+    });
   };
 
   return (
@@ -214,11 +228,11 @@ const CategoriesPage = () => {
 
       <Grid container spacing={3}>
         {categories.map((category) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={category.id}>
+          <Grid item xs={12} sm={6} md={4} lg={3} key={category.item_id}>
             <CategoryCard 
               category={category} 
-              items={items.filter(item => item.category === category.id)} 
-              onAddItems={handleAddItemsToCategory}
+              items={items} // Pass all items, not just filtered ones
+              onItemsUpdated={handleItemsUpdated}
             />
           </Grid>
         ))}
