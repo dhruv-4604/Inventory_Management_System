@@ -183,6 +183,10 @@ const CategoriesPage = () => {
     });
   };
 
+  const handleCategoryDeleted = (deletedCategoryId) => {
+    setCategories(prevCategories => prevCategories.filter(category => category.id !== deletedCategoryId));
+  };
+
   return (
     <Box sx={{ width: '100%', p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
@@ -228,11 +232,12 @@ const CategoriesPage = () => {
 
       <Grid container spacing={3}>
         {categories.map((category) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={category.item_id}>
+          <Grid item xs={12} sm={6} md={4} lg={3} key={category.id}>
             <CategoryCard 
               category={category} 
               items={items} // Pass all items, not just filtered ones
               onItemsUpdated={handleItemsUpdated}
+              onCategoryDeleted={handleCategoryDeleted}
             />
           </Grid>
         ))}

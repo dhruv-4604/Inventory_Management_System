@@ -1,5 +1,5 @@
 // CategoryCard.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardMedia,
@@ -23,11 +23,15 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper
+  Paper,
+  IconButton
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
 import api from '../../api';
+import axios from 'axios';
+import DeleteIcon from '@mui/icons-material/Delete';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 
 const StyledCard = styled(Card)(({ theme }) => ({
   maxWidth: 280,
@@ -111,24 +115,39 @@ const AddItemsButton = styled(StyledButton)({
   },
 });
 
-const CategoryCard = ({ category, items, onItemsUpdated }) => {
+const CategoryCard = ({ category, items, onItemsUpdated, onCategoryDeleted }) => {
   const [openProductsDialog, setOpenProductsDialog] = useState(false);
   const [openAddItemsDialog, setOpenAddItemsDialog] = useState(false);
   const [itemSearchTerm, setItemSearchTerm] = useState('');
   const [selectedItems, setSelectedItems] = useState([]);
+  const [categoryItems, setCategoryItems] = useState([]);
+  const [uncategorizedItems, setUncategorizedItems] = useState([]);
 
-  const categoryItems = items.filter(item => item.category === category.id);
-  const uncategorizedItems = items.filter(item => item.category === null);
+  useEffect(() => {
+    updateCategoryItems();
+  }, [items, category.id]);
 
-  const availableItems = uncategorizedItems.filter(item => 
-    item.name.toLowerCase().includes(itemSearchTerm.toLowerCase())
-  );
+  const updateCategoryItems = () => {
+    setCategoryItems(items.filter(item => item.category === category.id));
+  };
+
+  const fetchUncategorizedItems = async () => {
+    try {
+      const response = await api.get('/token/items/');
+      const uncategorized = response.data.filter(item => item.category === null);
+      setUncategorizedItems(uncategorized);
+    } catch (error) {
+      console.error('Error fetching uncategorized items:', error);
+    }
+  };
 
   const handleOpenProductsDialog = () => setOpenProductsDialog(true);
   const handleCloseProductsDialog = () => setOpenProductsDialog(false);
 
-  const handleOpenAddItemsDialog = () => {
+  const handleOpenAddItemsDialog = async (event) => {
+    event.stopPropagation(); // Prevent event from bubbling up to the card
     setSelectedItems([]);
+    await fetchUncategorizedItems();
     setOpenAddItemsDialog(true);
   };
 
@@ -154,8 +173,28 @@ const CategoryCard = ({ category, items, onItemsUpdated }) => {
       const updatedItems = [];
 
       for (const item of selectedItems) {
-        item.category = category.id;
-        const response = await api.put(`/token/items/`, item);
+        const formData = new FormData();
+        
+        // Append all item properties to formData
+        Object.keys(item).forEach(key => {
+          if (key !== 'image') {
+            formData.append(key, item[key]);
+          }
+        });
+        
+        // Update the category
+        formData.append('category', category.id);
+
+        // If there's an image, append it last
+        if (item.image instanceof File) {
+          formData.append('image', item.image);
+        }
+
+        const response = await api.put(`/token/items/`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
         updatedItems.push(response.data);
       }
 
@@ -167,13 +206,61 @@ const CategoryCard = ({ category, items, onItemsUpdated }) => {
     }
   };
 
+  const handleCardClick = () => {
+    handleOpenProductsDialog();
+  };
+
+  const handleDeleteCategory = async () => {
+    try {
+      await api.delete(`/token/categories/${category.id}/`);
+      onCategoryDeleted(category.id);
+      setOpenProductsDialog(false);
+    } catch (error) {
+      console.error('Error deleting category:', error);
+    }
+  };
+
+  const handleDeleteItem = async (item) => {
+    try {
+      const formData = new FormData();
+      
+      Object.keys(item).forEach(key => {
+        if (key !== 'image') {
+          formData.append(key, item[key] === null ? '' : item[key]);
+        }
+      });
+      
+      formData.append('category', '');
+
+      if (item.image instanceof File) {
+        formData.append('image', item.image);
+      }
+
+      const response = await api.put(`/token/items/`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      onItemsUpdated([response.data]);
+      
+      // Update the local state
+      setCategoryItems(prevItems => prevItems.filter(i => i.item_id !== item.item_id));
+    } catch (error) {
+      console.error('Error removing item from category:', error);
+    }
+  };
+
+  const availableItems = uncategorizedItems.filter(item => 
+    item.name.toLowerCase().includes(itemSearchTerm.toLowerCase())
+  );
+
   return (
     <>
-      <StyledCard>
+      <StyledCard onClick={handleCardClick} sx={{ cursor: 'pointer' }}>
         <CardMedia
           component="img"
           height="180"
-          image={category.image}
+          image={"http://127.0.0.1:8000"+category.image}
           alt={category.name}
         />
         <StyledCardContent>
@@ -185,7 +272,10 @@ const CategoryCard = ({ category, items, onItemsUpdated }) => {
             <TopSellingProduct>&nbsp;{category.topSelling}</TopSellingProduct>
           </TopSellingBox>
           <ButtonContainer>
-            <ProductCountButton variant="contained" onClick={handleOpenProductsDialog}>
+            <ProductCountButton variant="contained" onClick={(e) => {
+              e.stopPropagation();
+              handleOpenProductsDialog();
+            }}>
               {categoryItems.length} Products
             </ProductCountButton>
             <AddItemsButton variant="contained" onClick={handleOpenAddItemsDialog}>
@@ -197,7 +287,14 @@ const CategoryCard = ({ category, items, onItemsUpdated }) => {
 
       {/* Products Dialog */}
       <Dialog open={openProductsDialog} onClose={handleCloseProductsDialog} maxWidth="md" fullWidth>
-        <DialogTitle>{category.name} Products ({categoryItems.length})</DialogTitle>
+        <DialogTitle>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6">{category.name} Products</Typography>
+            <IconButton onClick={handleDeleteCategory} color="error">
+              <DeleteIcon />
+            </IconButton>
+          </div>
+        </DialogTitle>
         <DialogContent>
           <TableContainer component={Paper}>
             <Table>
@@ -206,6 +303,7 @@ const CategoryCard = ({ category, items, onItemsUpdated }) => {
                   <TableCell>Name</TableCell>
                   <TableCell>Quantity</TableCell>
                   <TableCell align="right">Price</TableCell>
+                  <TableCell align="right">Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -214,6 +312,11 @@ const CategoryCard = ({ category, items, onItemsUpdated }) => {
                     <TableCell>{item.name}</TableCell>
                     <TableCell>{item.quantity}</TableCell>
                     <TableCell align="right">${item.selling_price}</TableCell>
+                    <TableCell align="right">
+                      <IconButton onClick={() => handleDeleteItem(item)} size="small">
+                        <DeleteOutlineIcon />
+                      </IconButton>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
