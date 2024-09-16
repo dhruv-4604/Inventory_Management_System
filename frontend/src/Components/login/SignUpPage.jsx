@@ -67,9 +67,9 @@ const GradientBorderButton = styled(Button)(({ theme }) => ({
 }));
 
 const SignUpPage = () => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [companyname, setCompanyname] = useState('');
   const [phonenumber, setPhonenumber] = useState('');
   const [emailError, setEmailError] = useState('');
   const [formError, setFormError] = useState('');
@@ -119,9 +119,9 @@ const SignUpPage = () => {
 
     try {
       const res = await api.post('/register/', { 
+        name: name,
         email: email,
         password: password,
-        company_name: companyname,
         phone_number: phonenumber
       });
       navigate("/signin");
@@ -150,6 +150,13 @@ const SignUpPage = () => {
           <Box component="form" onSubmit={handleSubmit} noValidate sx={{ width: '100%', maxWidth: 400 }} >
             <StyledTextField 
               fullWidth
+              placeholder="Enter Full Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              sx={{ mb: 2 }}
+            />
+            <StyledTextField 
+              fullWidth
               placeholder="Enter Email Id"
               value={email}
               onChange={handleEmailChange}
@@ -172,16 +179,7 @@ const SignUpPage = () => {
             />
             <StyledTextField
               fullWidth
-              onChange={(e)=>setCompanyname(e.target.value)}
-              placeholder="Enter Company Name"
-              InputProps={{
-                startAdornment: <BusinessIcon sx={{ color: 'action.active', mr: 1 }} />,
-              }}
-              sx={{ mb: 2 }}
-            />
-            <StyledTextField
-              fullWidth
-              placeholder="Enter Company Phone"
+              placeholder="Enter Phone Number"
               value={phonenumber}
               onChange={handlePhoneChange}
               error={!!phoneError}

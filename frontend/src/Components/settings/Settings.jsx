@@ -1,32 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Box, Typography, TextField, Button, Paper, Grid, Avatar, Tabs, Tab 
+  Box, Typography, TextField, Button, Paper, Grid, Avatar, Tabs, Tab, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle 
 } from '@mui/material';
 import api from '../../api';
 import Sidebar from '../navigation/SideBar';
-import CameraAltIcon from '@mui/icons-material/CameraAlt';
 
 function Settings() {
   const [userData, setUserData] = useState({
-    // Personal details
-    first_name: '',
-    last_name: '',
+    name: '',
     email: '',
-    mobile_number: '', // Added mobile number
-    // Company details
+    phone_number: '',
     company_name: '',
     gst_number: '',
     bank_name: '',
     bank_account_number: '',
     ifsc_code: '',
-    address: '', // Moved to company details
-    city: '', // Moved to company details
-    state: '', // Moved to company details
-    pincode: '', // Moved to company details
-    profile_picture: null,
+    address: '',
+    city: '',
+    state: '',
+    pincode: '',
   });
   const [activeTab, setActiveTab] = useState(0);
-  const [previewImage, setPreviewImage] = useState(null);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     async function fetchUserData() {
@@ -49,33 +46,23 @@ function Settings() {
     setActiveTab(newValue);
   };
 
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setUserData({ ...userData, profile_picture: file });
-      setPreviewImage(URL.createObjectURL(file));
-    }
-  };
-
-  const handleProfilePicUpload = () => {
-    document.getElementById('profile-pic-input').click();
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setOpenDialog(true);
+  };
+
+  const handleConfirmSubmit = async () => {
     try {
-      const res = await api.put('/token/user/', userData);
+      const res = await api.put('/token/user/', { ...userData, password });
       setUserData(res.data);
+      setOpenDialog(false);
+      setPassword('');
+      setError('');
       alert('Details updated successfully!');
     } catch (error) {
       console.error('Error updating user data:', error);
-      alert('Failed to update details. Please try again.');
+      setError('Failed to update details. Please check your password and try again.');
     }
-  };
-
-  const handleChangePassword = () => {
-    // Implement password change logic here
-    console.log('Change password clicked');
   };
 
   return (
@@ -85,13 +72,7 @@ function Settings() {
         <Typography variant="h4" gutterBottom>Settings</Typography>
         <Paper elevation={3} sx={{ p: 3, mt: 2 }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs 
-              value={activeTab} 
-              onChange={handleTabChange} 
-              centered
-              indicatorColor="primary"
-              textColor="primary"
-            >
+            <Tabs value={activeTab} onChange={handleTabChange} centered>
               <Tab label="Personal Details" />
               <Tab label="Company Details" />
             </Tabs>
@@ -100,21 +81,12 @@ function Settings() {
             <Box sx={{ mt: 3 }}>
               {activeTab === 0 && (
                 <Grid container spacing={3}>
-                  <Grid item xs={12} display="flex" justifyContent="center">
-                    <Avatar 
-                      sx={{ width: 100, height: 100, fontSize: 40, mb: 2 }}
-                      alt={userData.full_name}
-                      src="/path-to-profile-image.jpg"
-                    >
-                      {userData.full_name}
-                    </Avatar>
-                  </Grid>
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
                       label="Full Name"
-                      name="full_name"
-                      value={userData.full_name}
+                      name="name"
+                      value={userData.name}
                       onChange={handleInputChange}
                     />
                   </Grid>
@@ -130,20 +102,11 @@ function Settings() {
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
-                      label="Mobile Number"
-                      name="mobile_number"
-                      value={userData.mobile_number}
+                      label="Phone Number"
+                      name="phone_number"
+                      value={userData.phone_number}
                       onChange={handleInputChange}
                     />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      onClick={handleChangePassword}
-                    >
-                      Change Password
-                    </Button>
                   </Grid>
                 </Grid>
               )}
@@ -241,6 +204,32 @@ function Settings() {
           </form>
         </Paper>
       </Box>
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+        <DialogTitle>Confirm Changes</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Please enter your password to confirm the changes.
+          </DialogContentText>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Password"
+            type="password"
+            fullWidth
+            variant="outlined"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            error={!!error}
+            helperText={error}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+          <Button onClick={handleConfirmSubmit} color="primary">
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

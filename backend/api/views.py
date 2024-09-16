@@ -1,10 +1,10 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny,IsAuthenticated
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.models import AbstractBaseUser
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from .serializers import CustomUserSerializer, CustomTokenObtainPairSerializer, ShipmentSerializer
+from .serializers import CustomUserSerializer, CustomTokenObtainPairSerializer, ShipmentSerializer, CompanySerializer
 
 User = get_user_model()
 
@@ -41,7 +41,7 @@ class UserDetailsAPIView(generics.GenericAPIView):
             company_data = company_serializer.data
         except Company.DoesNotExist:
             company_data = {
-                'company_name': user.company_name,
+                'company_name': '',
                 'gst_number': '',
                 'phone_number': user.phone_number,
                 'address': '',
@@ -59,6 +59,14 @@ class UserDetailsAPIView(generics.GenericAPIView):
 
     def put(self, request):
         user = request.user
+        password = request.data.get('password')
+
+        if not password:
+            return Response({"error": "Password is required to save changes."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not user.check_password(password):
+            return Response({"error": "Incorrect password."}, status=status.HTTP_400_BAD_REQUEST)
+
         user_serializer = self.get_serializer(user, data=request.data, partial=True)
         
         if user_serializer.is_valid():
@@ -66,7 +74,7 @@ class UserDetailsAPIView(generics.GenericAPIView):
 
             # Update or create company details
             company_data = {
-                'company_name': request.data.get('company_name', user.company_name),
+                'company_name': request.data.get('company_name', ''),
                 'gst_number': request.data.get('gst_number', ''),
                 'phone_number': request.data.get('phone_number', user.phone_number),
                 'address': request.data.get('address', ''),

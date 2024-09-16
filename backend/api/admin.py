@@ -1,32 +1,27 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import CustomUser, Item,Customer, SaleOrder, SaleOrderItem,Vendor,PurchaseOrder,PurchaseOrderItem,Company,Category
+from .models import CustomUser, Item, Customer, SaleOrder, SaleOrderItem, Vendor, PurchaseOrder, PurchaseOrderItem, Company, Category
 
 class CustomUserAdmin(BaseUserAdmin):
-    # The forms to add and change user instances
-    # form = CustomUserChangeForm  # Uncomment if you have a custom form for change view
-    # add_form = CustomUserCreationForm  # Uncomment if you have a custom form for add view
-
     # The fields to be used in displaying the User model.
-    # These override the definitions on the base UserAdmin
-    # that reference specific fields on auth.User.
-    list_display = ('email', 'company_name', 'phone_number', 'is_staff', 'is_superuser')
+    list_display = ('email', 'name', 'phone_number', 'is_staff', 'is_superuser')
     list_filter = ('is_staff', 'is_superuser')
 
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        ('Personal info', {'fields': ('company_name', 'phone_number')}),
-        ('Permissions', {'fields': ('is_staff', 'is_superuser')}),
+        ('Personal info', {'fields': ('name', 'phone_number')}),
+        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
+        ('Important dates', {'fields': ('last_login',)}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'password1', 'password2', 'company_name', 'phone_number', 'is_staff', 'is_superuser'),
+            'fields': ('email', 'name', 'phone_number', 'password1', 'password2'),
         }),
     )
-    search_fields = ('email',)
+    search_fields = ('email', 'name', 'phone_number')
     ordering = ('email',)
-    filter_horizontal = ()
+    filter_horizontal = ('groups', 'user_permissions',)
 
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Item)

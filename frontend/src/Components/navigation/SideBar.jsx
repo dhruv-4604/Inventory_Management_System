@@ -91,7 +91,7 @@ function Sidebar() {
     try {
       const res = await api.get('/token/user/')
  
-        setName(res.data.company_name)
+        setName(res.data.name)
         setEmail(res.data.email)
         console.log(res.data)
        

@@ -32,10 +32,10 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
+    name = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
-    password = models.CharField(max_length=128)
-    company_name = models.CharField(max_length=255)
     phone_number = models.CharField(max_length=15)
+    password = models.CharField(max_length=128)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)  # Field required for superuser
     is_superuser = models.BooleanField(default=False)  # Field required for superuser
@@ -43,7 +43,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     objects = CustomUserManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ['name', 'phone_number']
 
     def __str__(self):
         return self.email
