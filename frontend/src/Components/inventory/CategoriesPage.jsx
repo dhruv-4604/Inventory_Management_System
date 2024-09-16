@@ -1,5 +1,6 @@
 // CategoriesPage.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import {
   Box,
   Grid,
@@ -15,34 +16,26 @@ import {
   ListItem,
   ListItemText,
   Checkbox,
+  ListItemButton,
+  ListItemIcon,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import SortIcon from '@mui/icons-material/Sort';
 import AddIcon from '@mui/icons-material/Add';
 import CategoryCard from './CategoryCard';
-
-// Mock data for categories
-const mockCategories = [
-  { id: 1, name: 'Laptops', image: 'https://picsum.photos/200/300', topSelling: 'Acer Book 3 Pro' },
-  { id: 2, name: 'Smartphones', image: 'https://picsum.photos/200/300', topSelling: 'iPhone 13' },
-];
-
-// Mock data for items
-const mockItems = [
-  { id: 1, name: 'Laptop A', sku: 'LAP001', price: 999.99, categoryId: 1 },
-  { id: 2, name: 'Smartphone B', sku: 'PHN001', price: 699.99, categoryId: 2 },
-  { id: 3, name: 'Tablet C', sku: 'TAB001', price: 349.99, categoryId: null },
-  { id: 4, name: 'Headphones D', sku: 'AUD001', price: 149.99, categoryId: null },
-  { id: 5, name: 'Speaker E', sku: 'AUD002', price: 199.99, categoryId: null },
-];
+import api from '../../api';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
 const CategoriesPage = () => {
-  const [categories, setCategories] = useState(mockCategories);
-  const [items, setItems] = useState(mockItems);
+  const [categories, setCategories] = useState([]);
+  const [items, setItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [newCategory, setNewCategory] = useState({ name: '', image: '', items: [] });
   const [itemSearchTerm, setItemSearchTerm] = useState('');
+  const [uncategorizedItems, setUncategorizedItems] = useState([]);
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const buttonStyle = {
     background: 'linear-gradient(90deg, #D1EA67 , #A6F15A )',
@@ -56,6 +49,29 @@ const CategoriesPage = () => {
     fontWeight: 'semibold',
     padding: '8px 16px',
     borderRadius: '8px',
+  };
+
+  useEffect(() => {
+    fetchCategories();
+    fetchItems();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await api.get('http://localhost:8000/token/categories/');
+      setCategories(response.data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  const fetchItems = async () => {
+    try {
+      const response = await api.get('http://localhost:8000/token/items/');
+      setItems(response.data);
+    } catch (error) {
+      console.error('Error fetching items:', error);
+    }
   };
 
   const handleSearch = () => {
@@ -76,70 +92,85 @@ const CategoriesPage = () => {
     setOpenDialog(false);
     setNewCategory({ name: '', image: '', items: [] });
     setItemSearchTerm('');
+    setSelectedItems([]);
   };
 
-  const handleAddCategory = () => {
-    if (newCategory.name) {
-      const newCategoryId = categories.length + 1;
-      const newCategoryWithId = {
-        ...newCategory,
-        id: newCategoryId,
-        topSelling: newCategory.items[0]?.name || 'N/A',
-      };
+  useEffect(() => {
+    if (openDialog) {
+      fetchUncategorizedItems();
+    }
+  }, [openDialog]);
+
+  const fetchUncategorizedItems = async () => {
+    try {
+      const response = await api.get('http://localhost:8000/token/items/');
+      const items = response.data.filter(item => item.category === null);
+      setUncategorizedItems(items);
+    } catch (error) {
+      console.error('Error fetching uncategorized items:', error);
+    }
+  };
+
+  const handleAddCategory = async () => {
+    try {
+      const formData = new FormData();
+      formData.append('name', newCategory.name);
       
-      // Update categories
-      setCategories(prevCategories => [...prevCategories, newCategoryWithId]);
+      selectedItems.forEach((itemId) => {
+        formData.append('item_ids', itemId);
+      });
 
-      // Update items
-      setItems(prevItems => prevItems.map(item => 
-        newCategory.items.some(selectedItem => selectedItem.id === item.id)
-          ? { ...item, categoryId: newCategoryId }
-          : item
-      ));
+      if (selectedFile) {
+        formData.append('image', selectedFile);
+      }
 
+      const response = await api.post('http://localhost:8000/token/categories/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      await fetchCategories(); // Refresh categories after adding a new one
+      await fetchItems(); // Refresh items to update their categories
       handleCloseDialog();
+    } catch (error) {
+      console.error('Error adding category:', error);
     }
   };
 
   const handleItemToggle = (itemId) => {
-    const item = items.find(i => i.id === itemId);
-    if (item) {
-      setNewCategory(prev => {
-        const isCurrentlySelected = prev.items.some(i => i.id === itemId);
-        if (isCurrentlySelected) {
-          return { ...prev, items: prev.items.filter(i => i.id !== itemId) };
-        } else {
-          return { ...prev, items: [...prev.items, item] };
-        }
-      });
-    }
+    setSelectedItems(prevItems =>
+      prevItems.includes(itemId)
+        ? prevItems.filter(id => id !== itemId)
+        : [...prevItems, itemId]
+    );
   };
 
-  const handleAddItemsToCategory = (categoryId, itemsToAdd) => {
-    setItems(prevItems => prevItems.map(item => 
-      itemsToAdd.some(newItem => newItem.id === item.id)
-        ? { ...item, categoryId: categoryId }
-        : item
-    ));
+  const handleAddItemsToCategory = async (categoryId, itemsToAdd) => {
+    try {
+      const formData = new FormData();
+      formData.append('category_id', categoryId);
+      itemsToAdd.forEach(item => formData.append('item_ids', item.item_id));
 
-    // Update the category's top selling product if needed
-    setCategories(prevCategories => prevCategories.map(category => 
-      category.id === categoryId
-        ? {
-            ...category,
-            topSelling: itemsToAdd[0]?.name || category.topSelling,
-          }
-        : category
-    ));
+      await api.post('http://localhost:8000/token/categories/add_items/', formData);
+      
+      await fetchItems(); // Refresh items to update their categories
+      await fetchCategories(); // Refresh categories to update top selling items
+    } catch (error) {
+      console.error('Error adding items to category:', error);
+    }
   };
 
   const filteredItems = items.filter(item =>
     item.name.toLowerCase().includes(itemSearchTerm.toLowerCase())
   );
 
+  const handleFileChange = (event) => {
+    setSelectedFile(event.target.files[0]);
+  };
+
   return (
     <Box sx={{ width: '100%', p: 3 }}>
-
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
         <Button
           variant="contained"
@@ -186,7 +217,7 @@ const CategoriesPage = () => {
           <Grid item xs={12} sm={6} md={4} lg={3} key={category.id}>
             <CategoryCard 
               category={category} 
-              items={items} 
+              items={items.filter(item => item.category === category.id)} 
               onAddItems={handleAddItemsToCategory}
             />
           </Grid>
@@ -205,14 +236,25 @@ const CategoriesPage = () => {
             value={newCategory.name}
             onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
           />
-          <TextField
-            margin="dense"
-            label="Thumbnail URL (optional)"
-            type="text"
-            fullWidth
-            value={newCategory.image}
-            onChange={(e) => setNewCategory({ ...newCategory, image: e.target.value })}
-          />
+          <Button
+            component="label"
+            variant="outlined"
+            startIcon={<CloudUploadIcon />}
+            sx={{ mt: 2, mb: 2 }}
+          >
+            Upload Image
+            <input
+              type="file"
+              hidden
+              accept="image/*"
+              onChange={handleFileChange}
+            />
+          </Button>
+          {selectedFile && (
+            <Typography variant="body2" sx={{ ml: 1 }}>
+              {selectedFile.name}
+            </Typography>
+          )}
           <TextField
             margin="dense"
             label="Search Items"
@@ -228,22 +270,23 @@ const CategoriesPage = () => {
               ),
             }}
           />
+          <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+            Assign Uncategorized Items:
+          </Typography>
           <List sx={{ maxHeight: 200, overflow: 'auto' }}>
-            {filteredItems.map((item) => (
-              <ListItem key={item.id} dense button onClick={() => handleItemToggle(item.id)}>
-                <Checkbox
-                  edge="start"
-                  checked={newCategory.items.some(selectedItem => selectedItem.id === item.id)}
-                  tabIndex={-1}
-                  disableRipple
-                />
-                <ListItemText 
-                  primary={item.name} 
-                  secondary={item.categoryId 
-                    ? `Current Category: ${categories.find(c => c.id === item.categoryId)?.name}`
-                    : 'Uncategorized'
-                  }
-                />
+            {uncategorizedItems.map((item) => (
+              <ListItem key={item.item_id} disablePadding>
+                <ListItemButton onClick={() => handleItemToggle(item.item_id)} dense>
+                  <ListItemIcon>
+                    <Checkbox
+                      edge="start"
+                      checked={selectedItems.includes(item.item_id)}
+                      tabIndex={-1}
+                      disableRipple
+                    />
+                  </ListItemIcon>
+                  <ListItemText primary={item.name} />
+                </ListItemButton>
               </ListItem>
             ))}
           </List>

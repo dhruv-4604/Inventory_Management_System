@@ -10,13 +10,14 @@ import {
   Box,
   IconButton,
   Typography,
+  Autocomplete,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import api from '../../api';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-function EditItemModal({ open, onClose, item, onSave }) {
+function EditItemModal({ open, onClose, item, onSave, categories = [] }) {
   const [itemData, setItemData] = useState({});
   const [image, setImage] = useState(null);
   const fileInputRef = useRef(null);
@@ -33,6 +34,13 @@ function EditItemModal({ open, onClose, item, onSave }) {
     setItemData(prevData => ({
       ...prevData,
       [name]: value
+    }));
+  };
+
+  const handleCategoryChange = (event, newValue) => {
+    setItemData(prevData => ({
+      ...prevData,
+      category: newValue ? newValue.id : null
     }));
   };
 
@@ -129,13 +137,19 @@ function EditItemModal({ open, onClose, item, onSave }) {
               multiline
               rows={2}
             />
-            <TextField
+            <Autocomplete
               fullWidth
-              margin="normal"
-              label="Category"
-              name="category"
-              value={itemData.category || ''}
-              onChange={handleChange}
+              options={categories}
+              getOptionLabel={(option) => option.name}
+              value={categories.find(cat => cat.id === itemData.category) || null}
+              onChange={handleCategoryChange}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Category (Optional)"
+                  margin="normal"
+                />
+              )}
             />
           </Grid>
           <Grid item xs={12} md={6}>

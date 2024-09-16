@@ -198,7 +198,7 @@ const CategoryCard = ({ category, items, onAddItems }) => {
                   <TableRow key={item.id}>
                     <TableCell>{item.name}</TableCell>
                     <TableCell>{item.sku}</TableCell>
-                    <TableCell align="right">${item.price.toFixed(2)}</TableCell>
+                    <TableCell align="right">${item.price}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -237,7 +237,7 @@ const CategoryCard = ({ category, items, onAddItems }) => {
                 />
                 <ListItemText 
                   primary={item.name} 
-                  secondary={`SKU: ${item.sku}, Price: $${item.price.toFixed(2)}`}
+                  secondary={`SKU: ${item.sku}, Price: $${item.price}`}
                 />
               </ListItem>
             ))}

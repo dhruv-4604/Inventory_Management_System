@@ -17,7 +17,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import api from "../../api";
 import EditItemModal from './EditItemModal';
 
-function ItemDetailView({ open, onClose, item, onItemDeleted, onItemUpdated }) {
+function ItemDetailView({ open, onClose, item, onItemDeleted, onItemUpdated, categories }) {
   const [tabValue, setTabValue] = React.useState(0);
   const fileInputRef = useRef(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -182,6 +182,7 @@ function ItemDetailView({ open, onClose, item, onItemDeleted, onItemUpdated }) {
         onClose={() => setEditModalOpen(false)}
         item={item}
         onSave={handleEditSave}
+        categories={categories}
       />
     </Dialog>
   );

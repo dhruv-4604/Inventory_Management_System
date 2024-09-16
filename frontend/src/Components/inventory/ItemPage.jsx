@@ -1,4 +1,4 @@
-import React, { useState, useMemo,useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Box,
   Button,
@@ -21,14 +21,12 @@ import ItemDetailView from "./ItemDetailView";
 import NewItemModal from "./NewItemModal";
 import api from "../../api";
 
-
 const SquareImage = styled('img')({
   width: '50px',
   height: '50px',
   objectFit: 'cover',
   borderRadius: '4px',
 });
-
 
 const columnMap = [
   { key: "image", label: "IMAGE", align: "left" },
@@ -41,25 +39,39 @@ const columnMap = [
 
 function ItemPage() {
   const [items, setItems] = useState([]);
+  const [categories, setCategories] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
   const [newItemModalOpen, setNewItemModalOpen] = useState(false);
-  async function fetchData(){
- 
+  const [categoriesList, setCategoriesList] = useState([]);
+
+  async function fetchData() {
     try {
-      const res = await api.get('/token/items/')
- 
-      setItems(res.data)
-       
-      
-  } catch (error) {
-      alert(error)
+      const [itemsRes, categoriesRes] = await Promise.all([
+        api.get('/token/items/'),
+        api.get('/token/categories/')
+      ]);
+
+      const categoryMap = {};
+      categoriesRes.data.forEach(category => {
+        categoryMap[category.id] = category.name;
+      });
+      setCategories(categoryMap);
+      setCategoriesList(categoriesRes.data);
+
+      const itemsWithCategoryNames = itemsRes.data.map(item => ({
+        ...item,
+        category: categoryMap[item.category] || '-'
+      }));
+      setItems(itemsWithCategoryNames);
+    } catch (error) {
+      alert(error);
+    }
   }
-}
-  useEffect( () => { fetchData()
-}, [newItemModalOpen]);
 
-
+  useEffect(() => {
+    fetchData();
+  }, [newItemModalOpen]);
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
@@ -82,15 +94,19 @@ function ItemPage() {
   };
 
   const handleNewItemSave = (newItem) => {
-    setItems([...items, { ...newItem, id: items.length + 1, image: "/api/placeholder/50/50" }]);
+    setItems([...items, { ...newItem, id: items.length + 1, image: "/api/placeholder/50/50", category: categories[newItem.category] || '-' }]);
     setNewItemModalOpen(false);
   };
 
   const handleItemUpdate = (updatedItem) => {
+    const updatedItemWithCategoryName = {
+      ...updatedItem,
+      category: categories[updatedItem.category] || '-'
+    };
     setItems(prevItems => prevItems.map(item => 
-      item.item_id === updatedItem.item_id ? updatedItem : item
+      item.item_id === updatedItemWithCategoryName.item_id ? updatedItemWithCategoryName : item
     ));
-    setSelectedItem(updatedItem);
+    setSelectedItem(updatedItemWithCategoryName);
   };
 
   return (
@@ -100,7 +116,6 @@ function ItemPage() {
           variant="contained"
           startIcon={<SortIcon />}
           sx={{ 
-            
             background: 'linear-gradient(90deg, #D1EA67 , #A6F15A )',
             color: '#232619',
             boxShadow:'none',
@@ -137,7 +152,6 @@ function ItemPage() {
             }}
           />
           <Button
-         
             onClick={handleNewItemClick}
             variant="contained"
             startIcon={<AddIcon />}
@@ -165,7 +179,6 @@ function ItemPage() {
         <Table>
           <TableHead>
             <TableRow sx={{ backgroundColor: "#F9FAFB" }}>
-            
               {columnMap.map((column) => (
                 <TableCell
                   key={column.key}
@@ -188,7 +201,6 @@ function ItemPage() {
                 }}
                 onClick={() => handleItemClick(item)}
               >
-              
                 {columnMap.map((column) => (
                   <TableCell key={column.key} align={column.align} sx={{ userSelect: "none" }}>
                     {column.key === "image" ? (
@@ -207,18 +219,20 @@ function ItemPage() {
       </TableContainer>
       <ItemDetailView
         open={!!selectedItem}
-        onClose={() => { setSelectedItem(null); fetchData() }}
+        onClose={() => { setSelectedItem(null); fetchData(); }}
         item={selectedItem}
         onItemDeleted={(deletedItemId) => {
           setItems(prevItems => prevItems.filter(item => item.item_id !== deletedItemId));
           fetchData();
         }}
         onItemUpdated={handleItemUpdate}
+        categories={categoriesList}
       />
       <NewItemModal
         open={newItemModalOpen}
         onClose={() => setNewItemModalOpen(false)}
         onSave={handleNewItemSave}
+        categories={categoriesList}
       />
     </Box>
   );

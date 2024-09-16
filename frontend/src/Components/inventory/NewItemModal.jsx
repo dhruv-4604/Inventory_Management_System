@@ -19,22 +19,22 @@ import {
   IconButton,
   Select,
   MenuItem,
+  Autocomplete,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import api from '../../api';
-function NewItemModal({ open, onClose, onSave }) {
+function NewItemModal({ open, onClose, onSave, categories }) {
   const [itemData, setItemData] = useState({
     name: '',
     brand: '',
     description: '',
-    category: '',
+    category: null,
     purchase_price: '',
     selling_price: '',
     quantity: '',
     restock_quantity: '',
     image: null,
   });
-  const [image, setImage] = useState(null);
   const fileInputRef = useRef(null);
 
   const handleChange = (event) => {
@@ -42,6 +42,13 @@ function NewItemModal({ open, onClose, onSave }) {
     setItemData(prevData => ({
       ...prevData,
       [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleCategoryChange = (event, newValue) => {
+    setItemData(prevData => ({
+      ...prevData,
+      category: newValue ? newValue.id : null
     }));
   };
 
@@ -61,7 +68,7 @@ function NewItemModal({ open, onClose, onSave }) {
     try {
       const formData = new FormData();
       for (const key in itemData) {
-        if (key !== 'image') {
+        if (key !== 'image' && itemData[key] !== null) {
           formData.append(key, itemData[key]);
         }
       }
@@ -75,7 +82,6 @@ function NewItemModal({ open, onClose, onSave }) {
         },
       });
       
-      // Handle successful save (e.g., show a success message, update state, etc.)
       onSave(res.data);
     } catch (error) {
       alert(error)
@@ -84,13 +90,13 @@ function NewItemModal({ open, onClose, onSave }) {
       name: '',
       brand: '',
       description: '',
-      category: '',
+      category: null,
       purchase_price: '',
       selling_price: '',
       quantity: '',
       restock_quantity: '',
       image: null,
-    })
+    });
     onClose();
   };
 
@@ -136,13 +142,19 @@ function NewItemModal({ open, onClose, onSave }) {
               multiline
               rows={2}
             />
-            <TextField
+            <Autocomplete
               fullWidth
-              margin="normal"
-              label="Category"
-              name="category"
-              value={itemData.category}
-              onChange={handleChange}
+              options={categories}
+              getOptionLabel={(option) => option.name}
+              value={categories.find(cat => cat.id === itemData.category) || null}
+              onChange={handleCategoryChange}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Category (Optional)"
+                  margin="normal"
+                />
+              )}
             />
           </Grid>
           <Grid item xs={12} md={6}>
