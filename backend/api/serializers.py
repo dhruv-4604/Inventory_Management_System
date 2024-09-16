@@ -30,7 +30,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         token = super().get_token(user)
         token['email'] = user.email
-        token['company_name'] = user.company_name
+        token['name'] = user.name
         return token
 
 
