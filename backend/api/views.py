@@ -363,26 +363,27 @@ class CategoryView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        categories = Category.objects.all()
+        categories = Category.objects.filter(user=request.user)
         serializer = CategorySerializer(categories, many=True)
         return Response(serializer.data)
 
     def post(self, request):
-        serializer = CategorySerializer(data=request.data)
+        data = request.data.copy()
+        data['user'] = request.user.id
+        serializer = CategorySerializer(data=data)
         if serializer.is_valid():
             category = serializer.save()
             
             # Get the list of item IDs from the request data
             item_ids = request.data.get('item_ids', [])
             if item_ids:
-            
-                Item.objects.filter(item_id__in=item_ids).update(category=category)
+                Item.objects.filter(item_id__in=item_ids, user=request.user).update(category=category)
             
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, category_id):
-        category = get_object_or_404(Category, id=category_id)
+        category = get_object_or_404(Category, id=category_id, user=request.user)
         serializer = CategorySerializer(category, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -390,6 +391,6 @@ class CategoryView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, category_id):
-        category = get_object_or_404(Category, id=category_id)
+        category = get_object_or_404(Category, id=category_id, user=request.user)
         category.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

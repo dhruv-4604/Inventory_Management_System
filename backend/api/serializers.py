@@ -128,5 +128,5 @@ class CompanySerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id','name', 'image']
+        fields = ['id', 'name', 'image', 'user']
         read_only_fields = ['id']
