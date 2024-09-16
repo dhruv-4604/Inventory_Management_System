@@ -6,6 +6,7 @@ from django.contrib.auth.models import AbstractBaseUser
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .serializers import CustomUserSerializer, CustomTokenObtainPairSerializer, ShipmentSerializer, CompanySerializer
 
+
 User = get_user_model()
 
 class RegisterView(generics.CreateAPIView):
@@ -22,7 +23,7 @@ class RegisterView(generics.CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-from .models import Company
+from .models import Company, SaleOrderItem
 from .serializers import CompanySerializer
 
 class UserDetailsAPIView(generics.GenericAPIView):
@@ -229,7 +230,16 @@ class SaleOrderView(APIView):
         # Add user to the data
         data = request.data.copy()
         data['user'] = request.user.id
-        data['payment_received'] = data.pop('payment', False)  # Rename 'payment' to 'payment_received'
+        data['payment_received'] = data.pop('payment', False)
+
+        # Fetch customer email if customer_id is provided
+        customer_id = data.get('customer_id')
+        if customer_id:
+            try:
+                customer = Customer.objects.get(customer_id=customer_id, user=request.user)
+                data['customer_email'] = customer.email
+            except Customer.DoesNotExist:
+                pass
 
         # Ensure each item in the items list has the user field set
         for item in data['items']:
@@ -403,3 +413,51 @@ class CategoryView(APIView):
         category = get_object_or_404(Category, id=category_id, user=request.user)
         category.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from django.db.models import Sum
+from django.utils import timezone
+from .models import SaleOrder, Item, Category
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_data(request):
+    today = timezone.now().date()
+    first_day_of_month = today.replace(day=1)
+
+    todays_sales = SaleOrder.objects.filter(
+        user=request.user,
+        date__date=today
+    ).aggregate(total=Sum('total_amount'))['total'] or 0
+
+    monthly_sales = SaleOrder.objects.filter(
+        user=request.user,
+        date__gte=first_day_of_month
+    ).aggregate(total=Sum('total_amount'))['total'] or 0
+
+    low_stock_items = Item.objects.filter(
+        user=request.user,
+        quantity__lt=models.F('reorder_point')
+    ).values('item_id', 'name', 'quantity', 'reorder_point')[:3]
+
+    top_selling_items = SaleOrderItem.objects.filter(
+        user=request.user
+    ).values('item_id').annotate(
+        total_sales=Sum('quantity')
+    ).order_by('-total_sales')[:5]
+
+    top_categories = Category.objects.filter(
+        user=request.user
+    ).annotate(
+        total_sales=Sum('items__saleorderitem__quantity')
+    ).order_by('-total_sales')[:3].values('name', 'total_sales')
+
+    return Response({
+        'todaySales': todays_sales,
+        'monthlySales': monthly_sales,
+        'lowStockItems': list(low_stock_items),
+        'topSellingItems': list(top_selling_items),
+        'topCategories': list(top_categories),
+    })

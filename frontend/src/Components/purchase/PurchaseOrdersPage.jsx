@@ -63,7 +63,7 @@ const PurchaseOrdersPage = () => {
 
   const handlePayment = async (orderId) => {
     try {
-      await api.put(`/token/purchaseorders/${orderId}/`, { payment_status: 'Paid' });
+      await api.put(`/token/purchaseorders/${orderId}/`, { payment_status: true });
       fetchPurchaseOrders();
     } catch (error) {
       console.error('Error updating payment status:', error);
@@ -188,7 +188,9 @@ const PurchaseOrdersPage = () => {
                     <TableCell>{order.vendor_name}</TableCell>
                     <TableCell>{`$${order.total_amount}`}</TableCell>
                     <TableCell>
-                      {order.payment_status === 'Unpaid' ? (
+                      {order.payment_status ? (
+                        'Paid'
+                      ) : (
                         <Button
                           variant="contained"
                           color="primary"
@@ -197,8 +199,6 @@ const PurchaseOrdersPage = () => {
                         >
                           Mark as Paid
                         </Button>
-                      ) : (
-                        'Paid'
                       )}
                     </TableCell>
                     <TableCell>

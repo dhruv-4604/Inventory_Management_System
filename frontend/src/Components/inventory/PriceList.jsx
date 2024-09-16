@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -16,16 +16,35 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import SortIcon from '@mui/icons-material/Sort';
 import AddIcon from '@mui/icons-material/Add';
-
-const initialItems = [
-  { id: 1, name: 'Sofa', sku: 'Item 1 sku', type: 'Goods', description: 'A comfortable, modern sofa with plush cushions.', rate: 'Rs.731.00' },
-  { id: 2, name: 'asd', sku: 'sd', type: 'Goods', description: '', rate: '' },
-  { id: 3, name: 'asd', sku: 'sd', type: 'Goods', description: '', rate: '' },
-];
+import api from '../../api';
 
 const PriceListPage = () => {
-  const [items, setItems] = useState(initialItems);
+  const [items, setItems] = useState([]);
+  const [categories, setCategories] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [itemsResponse, categoriesResponse] = await Promise.all([
+          api.get('/token/items/'),
+          api.get('/token/categories/')
+        ]);
+
+        const categoriesMap = {};
+        categoriesResponse.data.forEach(category => {
+          categoriesMap[category.id] = category.name;
+        });
+
+        setCategories(categoriesMap);
+        setItems(itemsResponse.data);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
@@ -108,8 +127,8 @@ const PriceListPage = () => {
                 <Checkbox color="primary" />
               </TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>NAME</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>SKU</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>TYPE</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>QUANTITY</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>CATEGORY</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>DESCRIPTION</TableCell>
               <TableCell align="right" sx={{ fontWeight: 'bold' }}>RATE</TableCell>
             </TableRow>
@@ -124,10 +143,10 @@ const PriceListPage = () => {
                   <Checkbox color="primary" />
                 </TableCell>
                 <TableCell>{item.name}</TableCell>
-                <TableCell>{item.sku}</TableCell>
-                <TableCell>{item.type}</TableCell>
+                <TableCell>{item.quantity}</TableCell>
+                <TableCell>{categories[item.category] || 'Unknown'}</TableCell>
                 <TableCell>{item.description}</TableCell>
-                <TableCell align="right">{item.rate}</TableCell>
+                <TableCell align="right">{item.selling_price}</TableCell>
               </TableRow>
             ))}
           </TableBody>

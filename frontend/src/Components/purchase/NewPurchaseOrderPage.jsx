@@ -39,6 +39,11 @@ const VendorForm = ({ vendors, order, onOrderChange }) => {
 };
 
 const OrderItemsTable = ({ orderItems, availableItems, onItemChange, onAddItem, onRemoveItem }) => {
+  // Filter out items that are already in the order
+  const remainingItems = availableItems.filter(item => 
+    !orderItems.some(orderItem => orderItem.item && orderItem.item.item_id === item.item_id)
+  );
+
   return (
     <TableContainer component={Paper}>
       <Table>
@@ -56,10 +61,15 @@ const OrderItemsTable = ({ orderItems, availableItems, onItemChange, onAddItem, 
             <TableRow key={index}>
               <TableCell>
                 <Autocomplete
-                  options={availableItems}
+                  options={index === orderItems.length - 1 ? remainingItems : availableItems}
                   getOptionLabel={(option) => option?.name || ''}
                   value={item.item || null}
-                  onChange={(event, newValue) => onItemChange(index, 'item', newValue)}
+                  onChange={(event, newValue) => {
+                    onItemChange(index, 'item', newValue);
+                    if (newValue) {
+                      onItemChange(index, 'rate', newValue.purchase_price);
+                    }
+                  }}
                   renderInput={(params) => <TextField {...params} />}
                   fullWidth
                   isOptionEqualToValue={(option, value) => option.item_id === value.item_id}
@@ -74,12 +84,7 @@ const OrderItemsTable = ({ orderItems, availableItems, onItemChange, onAddItem, 
                 />
               </TableCell>
               <TableCell>
-                <TextField
-                  type="number"
-                  value={item.rate || ''}
-                  onChange={(e) => onItemChange(index, 'rate', parseFloat(e.target.value) || 0)}
-                  InputProps={{ inputProps: { min: 0, step: 0.01 } }}
-                />
+                {item.rate ? `$${item.rate}` : '-'}
               </TableCell>
               <TableCell>
                 {item.quantity && item.rate
@@ -182,6 +187,7 @@ const NewPurchaseOrderPage = () => {
       vendor_id: order.vendor_id,
       vendor_name: order.vendor_name,
       vendor_address: order.vendor_address,
+      vendor_phone: order.vendor_phone,
       payment_status: order.paymentStatus === 'Paid' ? 'PAID' : 'UNPAID',
       items: orderItems.filter(item => item.item && item.quantity).map(({ item, quantity, rate }) => ({
         item_id: item.item_id,
@@ -191,8 +197,6 @@ const NewPurchaseOrderPage = () => {
       total_amount: calculateTotal()
     };
 
-    console.log('Sending order data:', orderData);  // Log the data being sent
-
     try {
       const response = await api.post('/token/purchaseorders/', orderData);
       console.log('Purchase order saved successfully:', response.data);
@@ -200,10 +204,11 @@ const NewPurchaseOrderPage = () => {
     } catch (error) {
       console.error('Error saving purchase order:', error.response ? error.response.data : error);
       setError('Failed to save purchase order. Please check the form and try again.');
-      if (error.response) {
-        console.error('Error response:', error.response.data);  // Log the detailed error response
-      }
     }
+  };
+
+  const isOrderValid = () => {
+    return order.vendor_id !== 0 && orderItems.some(item => item.item && item.quantity > 0);
   };
 
   return (
@@ -237,7 +242,11 @@ const NewPurchaseOrderPage = () => {
         </Grid>
       )}
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-        <Button variant="contained" onClick={handleSaveOrder} disabled={loading || error}>
+        <Button 
+          variant="contained" 
+          onClick={handleSaveOrder} 
+          disabled={loading || error || !isOrderValid()}
+        >
           Save Purchase Order
         </Button>
       </Box>

@@ -7,21 +7,43 @@ import {
 import api from "../../api";
 
 const CustomerForm = ({ customers, order, onOrderChange }) => {
+  const [inputValue, setInputValue] = useState('');
+
+  const handleInputChange = (event, newInputValue) => {
+    setInputValue(newInputValue);
+    onOrderChange('customerName', newInputValue);
+  };
+
   return (
     <Box>
       <Autocomplete
         options={customers}
         getOptionLabel={(option) => option.name}
+        inputValue={inputValue}
+        onInputChange={handleInputChange}
         onChange={(event, newValue) => {
-          onOrderChange('customerId', newValue?.customer_id || null);
-          onOrderChange('customerName', newValue?.name || '');
-          onOrderChange('phoneNumber', newValue?.phone_number || '');
-          onOrderChange('address', newValue?.address || '');
-          onOrderChange('state', newValue?.state || '');
-          onOrderChange('city', newValue?.city || '');
-          onOrderChange('pincode', newValue?.pincode || '');
+          if (newValue) {
+            onOrderChange('customerId', newValue.customer_id);
+            onOrderChange('customerName', newValue.name);
+            onOrderChange('customerEmail', newValue.email);
+            onOrderChange('phoneNumber', newValue.phone_number);
+            onOrderChange('address', newValue.address);
+            onOrderChange('state', newValue.state);
+            onOrderChange('city', newValue.city);
+            onOrderChange('pincode', newValue.pincode);
+          } else {
+            onOrderChange('customerId', null);
+          }
         }}
         renderInput={(params) => <TextField {...params} label="Customer" fullWidth />}
+        freeSolo
+      />
+      <TextField
+        fullWidth
+        label="Email"
+        value={order.customerEmail}
+        onChange={(e) => onOrderChange('customerEmail', e.target.value)}
+        margin="normal"
       />
       <TextField
         fullWidth
@@ -195,8 +217,9 @@ const NewSaleOrderPage = () => {
   const [customers, setCustomers] = useState([]);
   const [orderItems, setOrderItems] = useState([]);
   const [order, setOrder] = useState({
-    customer_id: null,
+    customerId: null,
     customerName: '',
+    customerEmail: '',
     phoneNumber: '',
     orderMode: 'AT SHOP',
     address: '',
@@ -218,7 +241,6 @@ const NewSaleOrderPage = () => {
         ]);
         setAvailableItems(itemsResponse.data);
         setCustomers(customersResponse.data);
-        // Add an initial empty row
         setOrderItems([{ item: null, quantity: 1, amount: 0 }]);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -245,7 +267,6 @@ const NewSaleOrderPage = () => {
       
       newItems[index].amount = price * calculatedQuantity;
 
-      // Update available and selected items
       if (field === 'item') {
         setSelectedItems(prev => {
           const updated = new Set(prev);
@@ -285,21 +306,56 @@ const NewSaleOrderPage = () => {
 
   const isOrderValid = () => {
     return (
-      order.customerId && // Check if a customer is selected
-      orderItems.some(item => item.item && item.quantity > 0) // Check if at least one item is added
+      order.customerName &&
+      order.customerEmail &&
+      order.phoneNumber &&
+      orderItems.some(item => item.item && item.quantity > 0)
+    );
+  };
+
+  const findExistingCustomer = () => {
+    return customers.find(c => 
+      c.name === order.customerName &&
+      c.email === order.customerEmail &&
+      c.phone_number === order.phoneNumber
     );
   };
 
   const handleSaveOrder = async () => {
     if (!isOrderValid()) {
-      // You might want to show an error message to the user here
       console.error('Cannot save order: Please select a customer and add at least one item.');
       return;
     }
 
+    let customerId = order.customerId;
+
+    if (!customerId) {
+      const existingCustomer = findExistingCustomer();
+      if (existingCustomer) {
+        customerId = existingCustomer.customer_id;
+      } else {
+        try {
+          const newCustomerResponse = await api.post('/customers/', {
+            name: order.customerName,
+            email: order.customerEmail,
+            phone_number: order.phoneNumber,
+            address: order.address,
+            state: order.state,
+            city: order.city,
+            pincode: order.pincode
+          });
+          customerId = newCustomerResponse.data.customer_id;
+        } catch (error) {
+          console.error('Failed to add new customer:', error);
+          return;
+        }
+      }
+    }
+
     const orderData = {
-      customer_id: order.customerId || 0,
+      customer_id: customerId,
       customer_name: order.customerName,
+      customer_email: order.customerEmail,
       customer_address: order.address,
       customer_state: order.state,
       customer_city: order.city,
@@ -324,7 +380,6 @@ const NewSaleOrderPage = () => {
       navigate('/sales/sale_orders');
     } catch (error) {
       console.error('Error saving order:', error.response ? error.response.data : error.message);
-      // Handle error (e.g., show error message to user)
     }
   };
 
