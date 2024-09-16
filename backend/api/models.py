@@ -140,6 +140,7 @@ class SaleOrderItem(models.Model):
     item_id = models.IntegerField(default=0)
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     rate = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='sale_order_items')
 
     def __str__(self):
         return f"{self.quantity} x Item {self.item_id} for Sale Order {self.sale_order.sale_order_id}"
@@ -167,6 +168,7 @@ class PurchaseOrderItem(models.Model):
     item_id = models.IntegerField()
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     rate = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='purchase_order_items')
 
     def __str__(self):
         return f"{self.quantity} x Item {self.item_id} for Purchase Order {self.purchase_order.purchase_order_id}"
@@ -185,6 +187,7 @@ class Shipment(models.Model):
     carrier = models.CharField(max_length=50)
     tracking_id = models.CharField(max_length=11, unique=True, default=generate_tracking_id, validators=[MinLengthValidator(11)])
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='IN_TRANSIT')
+    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='shipments')
 
     def __str__(self):
         return f"Shipment {self.shipment_id} for Order {self.order_id}"

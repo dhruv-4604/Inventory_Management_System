@@ -231,6 +231,10 @@ class SaleOrderView(APIView):
         data['user'] = request.user.id
         data['payment_received'] = data.pop('payment', False)  # Rename 'payment' to 'payment_received'
 
+        # Ensure each item in the items list has the user field set
+        for item in data['items']:
+            item['user'] = request.user.id
+
         serializer = SaleOrderSerializer(data=data)
         if serializer.is_valid():
             # Create the sale order
@@ -253,6 +257,7 @@ class SaleOrderView(APIView):
                     'order_id': sale_order.sale_order_id,
                     'customer_name': sale_order.customer_name,
                     'carrier': sale_order.carrier,
+                    'user': request.user.id,  # Add user to shipment data
                 }
                 shipment_serializer = ShipmentSerializer(data=shipment_data)
                 if shipment_serializer.is_valid():
@@ -291,6 +296,10 @@ class PurchaseOrderView(APIView):
         # Add user to the data
         data = request.data.copy()
         data['user'] = request.user.id
+
+        # Ensure each item in the items list has the user field set
+        for item in data['items']:
+            item['user'] = request.user.id
 
         serializer = PurchaseOrderSerializer(data=data)
         if serializer.is_valid():

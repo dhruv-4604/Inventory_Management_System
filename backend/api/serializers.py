@@ -85,7 +85,7 @@ class VendorSerializer(serializers.ModelSerializer):
 class SaleOrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = SaleOrderItem
-        fields = ['item_id', 'quantity', 'rate']
+        fields = ['item_id', 'quantity', 'rate', 'user']
 
 class SaleOrderSerializer(serializers.ModelSerializer):
     items = SaleOrderItemSerializer(many=True)
@@ -101,6 +101,7 @@ class SaleOrderSerializer(serializers.ModelSerializer):
         items_data = validated_data.pop('items')
         sale_order = SaleOrder.objects.create(**validated_data)
         for item_data in items_data:
+            item_data['user'] = validated_data['user']
             SaleOrderItem.objects.create(sale_order=sale_order, **item_data)
         return sale_order
 
@@ -109,7 +110,7 @@ class SaleOrderSerializer(serializers.ModelSerializer):
 class PurchaseOrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = PurchaseOrderItem
-        fields = ['item_id', 'quantity', 'rate']
+        fields = ['item_id', 'quantity', 'rate', 'user']
 
 class PurchaseOrderSerializer(serializers.ModelSerializer):
     items = PurchaseOrderItemSerializer(many=True)
@@ -123,6 +124,7 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
         items_data = validated_data.pop('items')
         purchase_order = PurchaseOrder.objects.create(**validated_data)
         for item_data in items_data:
+            item_data['user'] = validated_data['user']
             PurchaseOrderItem.objects.create(purchase_order=purchase_order, **item_data)
         return purchase_order
 
@@ -131,7 +133,7 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
 class ShipmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Shipment
-        fields = ['shipment_id', 'date', 'order_id', 'customer_name', 'carrier', 'tracking_id', 'status']
+        fields = ['shipment_id', 'date', 'order_id', 'customer_name', 'carrier', 'tracking_id', 'status', 'user']
         read_only_fields = ['shipment_id', 'date', 'tracking_id']
 
 

@@ -182,7 +182,6 @@ const NewPurchaseOrderPage = () => {
       vendor_id: order.vendor_id,
       vendor_name: order.vendor_name,
       vendor_address: order.vendor_address,
-      vendor_phone: order.vendor_phone,
       payment_status: order.paymentStatus === 'Paid' ? 'PAID' : 'UNPAID',
       items: orderItems.filter(item => item.item && item.quantity).map(({ item, quantity, rate }) => ({
         item_id: item.item_id,
@@ -192,6 +191,8 @@ const NewPurchaseOrderPage = () => {
       total_amount: calculateTotal()
     };
 
+    console.log('Sending order data:', orderData);  // Log the data being sent
+
     try {
       const response = await api.post('/token/purchaseorders/', orderData);
       console.log('Purchase order saved successfully:', response.data);
@@ -199,6 +200,9 @@ const NewPurchaseOrderPage = () => {
     } catch (error) {
       console.error('Error saving purchase order:', error.response ? error.response.data : error);
       setError('Failed to save purchase order. Please check the form and try again.');
+      if (error.response) {
+        console.error('Error response:', error.response.data);  // Log the detailed error response
+      }
     }
   };
 
