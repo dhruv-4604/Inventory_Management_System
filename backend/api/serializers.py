@@ -5,25 +5,41 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import Category, Item,Customer,Vendor,SaleOrder, SaleOrderItem,PurchaseOrder,PurchaseOrderItem, Shipment, Company
 
 User = get_user_model()
-
+class CompanySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = ['company_name', 'gst_number', 'phone_number', 'address', 'city', 'state', 'pincode', 'bank_name', 'bank_account_number', 'ifsc_code']
+     
+     
 class CustomUserSerializer(serializers.ModelSerializer):
+    company = CompanySerializer(required=False)
     password = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
-        fields = ['id', 'name', 'email', 'phone_number', 'password']
+        fields = ['id', 'email', 'name', 'phone_number', 'password', 'company']
         extra_kwargs = {
             'password': {'write_only': True},
         }
 
     def create(self, validated_data):
+        company_data = validated_data.pop('company', None)
         user = User.objects.create_user(
             email=validated_data['email'],
             password=validated_data['password'],
             name=validated_data['name'],
             phone_number=validated_data['phone_number']
         )
+        if company_data:
+            Company.objects.create(user=user, **company_data)
         return user
+
+    def update(self, instance, validated_data):
+        company_data = validated_data.pop('company', None)
+        instance = super().update(instance, validated_data)
+        if company_data:
+            Company.objects.update_or_create(user=instance, defaults=company_data)
+        return instance
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -120,11 +136,7 @@ class ShipmentSerializer(serializers.ModelSerializer):
 
 
 
-class CompanySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Company
-        fields = ['company_name', 'gst_number', 'phone_number', 'address', 'city', 'state', 'pincode', 'bank_name', 'bank_account_number', 'ifsc_code']
-        
+   
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category

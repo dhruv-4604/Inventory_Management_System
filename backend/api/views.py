@@ -57,45 +57,45 @@ class UserDetailsAPIView(generics.GenericAPIView):
         response_data = {**user_data, **company_data}
         return Response(response_data, status=status.HTTP_200_OK)
 
-    def put(self, request):
-        user = request.user
-        password = request.data.get('password')
+    # def put(self, request):
+    #     user = request.user
+    #     password = request.data.get('password')
 
-        if not password:
-            return Response({"error": "Password is required to save changes."}, status=status.HTTP_400_BAD_REQUEST)
+    #     if not password:
+    #         return Response({"error": "Password is required to save changes."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not user.check_password(password):
-            return Response({"error": "Incorrect password."}, status=status.HTTP_400_BAD_REQUEST)
+    #     if not user.check_password(password):
+    #         return Response({"error": "Incorrect password."}, status=status.HTTP_400_BAD_REQUEST)
 
-        user_serializer = self.get_serializer(user, data=request.data, partial=True)
+    #     user_serializer = self.get_serializer(user, data=request.data, partial=True)
         
-        if user_serializer.is_valid():
-            user_serializer.save()
+    #     if user_serializer.is_valid():
+    #         user_serializer.save()
 
-            # Update or create company details
-            company_data = {
-                'company_name': request.data.get('company_name', ''),
-                'gst_number': request.data.get('gst_number', ''),
-                'phone_number': request.data.get('phone_number', user.phone_number),
-                'address': request.data.get('address', ''),
-                'city': request.data.get('city', ''),
-                'state': request.data.get('state', ''),
-                'pincode': request.data.get('pincode', ''),
-                'bank_name': request.data.get('bank_name', ''),
-                'bank_account_number': request.data.get('bank_account_number', ''),
-                'ifsc_code': request.data.get('ifsc_code', ''),
-            }
+    #         # Update or create company details
+    #         company_data = {
+    #             'company_name': request.data.get('company_name', ''),
+    #             'gst_number': request.data.get('gst_number', ''),
+    #             'phone_number': request.data.get('phone_number', user.phone_number),
+    #             'address': request.data.get('address', ''),
+    #             'city': request.data.get('city', ''),
+    #             'state': request.data.get('state', ''),
+    #             'pincode': request.data.get('pincode', ''),
+    #             'bank_name': request.data.get('bank_name', ''),
+    #             'bank_account_number': request.data.get('bank_account_number', ''),
+    #             'ifsc_code': request.data.get('ifsc_code', ''),
+    #         }
 
-            company, created = Company.objects.update_or_create(
-                user=user,
-                defaults=company_data
-            )
+    #         company, created = Company.objects.update_or_create(
+    #             user=user,
+    #             defaults=company_data
+    #         )
 
-            # Combine user and company data for response
-            response_data = {**user_serializer.data, **CompanySerializer(company).data}
-            return Response(response_data, status=status.HTTP_200_OK)
+    #         # Combine user and company data for response
+    #         response_data = {**user_serializer.data, **CompanySerializer(company).data}
+    #         return Response(response_data, status=status.HTTP_200_OK)
         
-        return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #     return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import api from '../../api'
 import { useNavigate } from "react-router-dom";
+import { ACCESS_TOKEN, REFRESH_TOKEN } from "../../constants";
 
 import { 
   Box, 
@@ -110,24 +111,28 @@ const SignUpPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setFormError('');
 
-    if (!validatePhoneNumber(phonenumber)) {
-      setPhoneError('Please enter a valid 10-digit phone number');
-      setLoading(false);
-      return;
-    }
+    // Clear local storage
+    localStorage.removeItem(ACCESS_TOKEN);
+    localStorage.removeItem(REFRESH_TOKEN);
 
     try {
-      const res = await api.post('/register/', { 
-        name: name,
+      const res = await api.post('/register/', {
         email: email,
         password: password,
+        name: name,
         phone_number: phonenumber
       });
+
+      // If registration is successful, you might want to automatically log the user in
       navigate("/signin");
     } catch (error) {
-      setFormError('This email is already taken. Please Sign in.');
-      console.log(error);
+      if (error.response && error.response.data) {
+        setFormError(Object.values(error.response.data).join(' '));
+      } else {
+        setFormError('An error occurred during registration. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

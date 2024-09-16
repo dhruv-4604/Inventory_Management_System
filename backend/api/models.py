@@ -5,6 +5,7 @@ from django.core.validators import MinValueValidator
 import random
 import string
 from django.core.validators import MinLengthValidator
+from django.utils import timezone
 
 def generate_tracking_id():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=11))
@@ -32,18 +33,18 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
-    name = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
-    phone_number = models.CharField(max_length=15)
-    password = models.CharField(max_length=128)
+    name = models.CharField(max_length=255)
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)  # Field required for superuser
     is_superuser = models.BooleanField(default=False)  # Field required for superuser
+    date_joined = models.DateTimeField(default=timezone.now)
 
     objects = CustomUserManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['name', 'phone_number']
+    REQUIRED_FIELDS = ['name']
 
     def __str__(self):
         return self.email
@@ -192,12 +193,11 @@ class Company(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='company')
     company_name = models.CharField(max_length=255)
     gst_number = models.CharField(max_length=15, blank=True, null=True)
-    phone_number = models.CharField(max_length=15)
-    address = models.TextField()
-    city = models.CharField(max_length=100)
-    state = models.CharField(max_length=100)
-    pincode = models.CharField(max_length=6)
-    bank_name = models.CharField(max_length=255, blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    state = models.CharField(max_length=100, blank=True, null=True)
+    pincode = models.CharField(max_length=10, blank=True, null=True)
+    bank_name = models.CharField(max_length=100, blank=True, null=True)
     bank_account_number = models.CharField(max_length=20, blank=True, null=True)
     ifsc_code = models.CharField(max_length=11, blank=True, null=True)
 
