@@ -5,10 +5,11 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import Category, Item,Customer,Vendor,SaleOrder, SaleOrderItem,PurchaseOrder,PurchaseOrderItem, Shipment, Company
 
 User = get_user_model()
+
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
-        fields = ['company_name', 'gst_number', 'phone_number', 'address', 'city', 'state', 'pincode', 'bank_name', 'bank_account_number', 'ifsc_code']
+        fields = ['company_name', 'gst_number', 'address', 'city', 'state', 'pincode', 'bank_name', 'bank_account_number', 'ifsc_code']
      
      
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -95,8 +96,8 @@ class SaleOrderSerializer(serializers.ModelSerializer):
         fields = ['sale_order_id', 'date', 'customer_id', 'customer_name', 'customer_email',
                   'customer_address', 'customer_state', 'customer_city', 'customer_pincode',
                   'mode_of_delivery', 'carrier', 'payment_received', 'items', 'discount',
-                  'total_amount', 'user']
-        read_only_fields = ['sale_order_id', 'date']
+                  'total_amount', 'invoice_pdf', 'user']
+        read_only_fields = ['sale_order_id', 'date', 'invoice_pdf']
 
     def create(self, validated_data):
         items_data = validated_data.pop('items')

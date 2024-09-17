@@ -222,6 +222,27 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from .models import SaleOrder, Item
 from .serializers import SaleOrderSerializer
+from io import BytesIO
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.platypus import Table, TableStyle
+from django.core.files.base import ContentFile
+
+
+from django.core.mail import send_mail, EmailMessage
+from django.conf import settings
+from reportlab.lib.units import inch
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import Paragraph, Spacer
+from .models import Company
+
+
+
+
+
+
+
 
 class SaleOrderView(APIView):
     permission_classes = [IsAuthenticated]
@@ -261,6 +282,9 @@ class SaleOrderView(APIView):
                     sale_order.delete()
                     return Response({"error": f"Not enough stock for item {item.name}"}, status=status.HTTP_400_BAD_REQUEST)
 
+            # Generate and save invoice PDF
+            self.generate_invoice_pdf(sale_order)
+
             # Create shipment if mode_of_delivery is 'DELIVERY'
             if data['mode_of_delivery'] == 'DELIVERY':
                 shipment_data = {
@@ -279,6 +303,110 @@ class SaleOrderView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    
+
+
+    def generate_invoice_pdf(self, sale_order):
+        buffer = BytesIO()
+        p = canvas.Canvas(buffer, pagesize=letter)
+        width, height = letter
+
+        # Set up the PDF
+        p.setFont("Helvetica-Bold", 16)
+        p.drawString(50, height - 50, "Invoice")
+
+        # Add company details
+        # company = Company.objects.get(user=sale_order.user)
+        # p.setFont("Helvetica", 10)
+        # p.drawString(50, height - 80, f"Company: {company.company_name}")
+        # p.drawString(50, height - 95, f"GST: {company.gst_number}")
+        # p.drawString(50, height - 110, f"Address: {company.address}")
+        # p.drawString(50, height - 125, f"{company.city}, {company.state} - {company.pincode}")
+
+        # Add sale order details
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(400, height - 80, f"Order ID: {sale_order.sale_order_id}")
+        p.drawString(400, height - 95, f"Date: {sale_order.date.strftime('%Y-%m-%d')}")
+
+        # Add customer details
+        p.setFont("Helvetica", 10)
+        p.drawString(50, height - 155, f"Customer: {sale_order.customer_name}")
+        p.drawString(50, height - 170, f"Address: {sale_order.customer_address}")
+        p.drawString(50, height - 185, f"{sale_order.customer_city}, {sale_order.customer_state} - {sale_order.customer_pincode}")
+
+        # Create table for order items
+        data = [["Item", "Quantity", "Rate", "Total"]]
+        for item in sale_order.items.all():
+            data.append([
+                str(item.item_id),
+                str(item.quantity),
+                f"₹{item.rate:.2f}",
+                f"₹{item.quantity * item.rate:.2f}"
+            ])
+
+        table = Table(data, colWidths=[2*inch, 1*inch, 1*inch, 1*inch])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('TOPPADDING', (0, 1), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+
+        table.wrapOn(p, width - 100, height)
+        table.drawOn(p, 50, height - 400)
+
+        # Add total amount and discount
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(350, 150, f"Subtotal: ₹{sale_order.total_amount + sale_order.discount:.2f}")
+        p.drawString(350, 135, f"Discount: ₹{sale_order.discount:.2f}")
+        p.drawString(350, 120, f"Total Amount: ₹{sale_order.total_amount:.2f}")
+
+        # Add payment status
+        p.setFont("Helvetica", 10)
+        payment_status = "Paid" if sale_order.payment_received else "Unpaid"
+        p.drawString(50, 100, f"Payment Status: {payment_status}")
+
+        # Add delivery information
+        p.drawString(50, 85, f"Mode of Delivery: {sale_order.get_mode_of_delivery_display()}")
+        if sale_order.mode_of_delivery == 'DELIVERY':
+            p.drawString(50, 70, f"Carrier: {sale_order.get_carrier_display()}")
+
+        # Add footer
+        p.setFont("Helvetica", 8)
+        p.drawString(inch, 0.75 * inch, "Thank you for your business!")
+
+        p.showPage()
+        p.save()
+
+        # Save the PDF to the sale_order model
+        pdf_file = ContentFile(buffer.getvalue())
+        sale_order.invoice_pdf.save(f'invoice_{sale_order.sale_order_id}.pdf', pdf_file)
+
+        # Send email with invoice
+        subject = 'Sale Order Invoice'
+        message = f'Please find attached the invoice for your order (ID: {sale_order.sale_order_id}).'
+        from_email = settings.EMAIL_HOST_USER
+        recipient_list = [sale_order.customer_email]
+        mail = EmailMessage(subject=subject, body=message, from_email=from_email, to=recipient_list)
+        mail.attach_file(f"{settings.BASE_DIR}/media/invoices/invoice_{sale_order.sale_order_id}.pdf")
+        mail.send()
+
+
+
+
+
+
+
     def get(self, request):
         sale_orders = SaleOrder.objects.filter(user=request.user)
         serializer = SaleOrderSerializer(sale_orders, many=True)
@@ -295,6 +423,8 @@ class SaleOrderView(APIView):
         serializer = SaleOrderSerializer(sale_order)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    # def send_invoice_email(self):
+       
 
 from .models import PurchaseOrder, Item
 from .serializers import PurchaseOrderSerializer
@@ -413,51 +543,3 @@ class CategoryView(APIView):
         category = get_object_or_404(Category, id=category_id, user=request.user)
         category.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from django.db.models import Sum
-from django.utils import timezone
-from .models import SaleOrder, Item, Category
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def dashboard_data(request):
-    today = timezone.now().date()
-    first_day_of_month = today.replace(day=1)
-
-    todays_sales = SaleOrder.objects.filter(
-        user=request.user,
-        date__date=today
-    ).aggregate(total=Sum('total_amount'))['total'] or 0
-
-    monthly_sales = SaleOrder.objects.filter(
-        user=request.user,
-        date__gte=first_day_of_month
-    ).aggregate(total=Sum('total_amount'))['total'] or 0
-
-    low_stock_items = Item.objects.filter(
-        user=request.user,
-        quantity__lt=models.F('reorder_point')
-    ).values('item_id', 'name', 'quantity', 'reorder_point')[:3]
-
-    top_selling_items = SaleOrderItem.objects.filter(
-        user=request.user
-    ).values('item_id').annotate(
-        total_sales=Sum('quantity')
-    ).order_by('-total_sales')[:5]
-
-    top_categories = Category.objects.filter(
-        user=request.user
-    ).annotate(
-        total_sales=Sum('items__saleorderitem__quantity')
-    ).order_by('-total_sales')[:3].values('name', 'total_sales')
-
-    return Response({
-        'todaySales': todays_sales,
-        'monthlySales': monthly_sales,
-        'lowStockItems': list(low_stock_items),
-        'topSellingItems': list(top_selling_items),
-        'topCategories': list(top_categories),
-    })

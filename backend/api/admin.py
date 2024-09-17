@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import CustomUser, Item, Customer, SaleOrder, SaleOrderItem, Vendor, PurchaseOrder, PurchaseOrderItem, Company, Category
+from .models import CustomUser, Item, Customer, SaleOrder, SaleOrderItem, Vendor, PurchaseOrder, PurchaseOrderItem, Company, Category, Shipment
 
 class CustomUserAdmin(BaseUserAdmin):
     # The fields to be used in displaying the User model.
@@ -33,4 +33,5 @@ admin.site.register(PurchaseOrder)
 admin.site.register(PurchaseOrderItem)
 admin.site.register(Company)
 admin.site.register(Category)
+admin.site.register(Shipment)
 
