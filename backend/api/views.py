@@ -242,7 +242,10 @@ from .models import Company
 
 
 
-
+from reportlab.lib.units import inch
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import Paragraph, Spacer
+from num2words import num2words
 
 class SaleOrderView(APIView):
     permission_classes = [IsAuthenticated]
@@ -313,46 +316,65 @@ class SaleOrderView(APIView):
 
         # Set up the PDF
         p.setFont("Helvetica-Bold", 16)
-        p.drawString(50, height - 50, "Invoice")
+        p.drawString(50, height - 50, "Max Electronics")
 
         # Add company details
-        # company = Company.objects.get(user=sale_order.user)
-        # p.setFont("Helvetica", 10)
-        # p.drawString(50, height - 80, f"Company: {company.company_name}")
-        # p.drawString(50, height - 95, f"GST: {company.gst_number}")
-        # p.drawString(50, height - 110, f"Address: {company.address}")
-        # p.drawString(50, height - 125, f"{company.city}, {company.state} - {company.pincode}")
+        company = Company.objects.get(user=sale_order.user)
+        p.setFont("Helvetica", 10)
+        p.drawString(50, height - 70, f"A 204,Shivaji Nagar, Bengaluru")
+        p.drawString(50, height - 85, f"GSTIN/UIN: {company.gst_number}")
+        p.drawString(50, height - 100, f"State Name: Karnataka, Code: 29")
+        p.drawString(50, height - 115, f"Contact: +91 9123456")
+        p.drawString(50, height - 130, f"E-Mail: Max@maxelectronics.com")
+        p.drawString(50, height - 145, f"www.maxelectronics.com")
 
-        # Add sale order details
+        # Add invoice details
         p.setFont("Helvetica-Bold", 12)
-        p.drawString(400, height - 80, f"Order ID: {sale_order.sale_order_id}")
-        p.drawString(400, height - 95, f"Date: {sale_order.date.strftime('%Y-%m-%d')}")
+        p.drawString(400, height - 50, f"Voucher No: {sale_order.sale_order_id}")
+        p.drawString(400, height - 65, f"Dated: {sale_order.date.strftime('%d-%b-%Y')}")
+        p.drawString(400, height - 80, "Mode/Terms of Payment")
+        p.drawString(400, height - 95, "15 Days Via Cheque")
 
         # Add customer details
         p.setFont("Helvetica", 10)
-        p.drawString(50, height - 155, f"Customer: {sale_order.customer_name}")
-        p.drawString(50, height - 170, f"Address: {sale_order.customer_address}")
-        p.drawString(50, height - 185, f"{sale_order.customer_city}, {sale_order.customer_state} - {sale_order.customer_pincode}")
+        p.drawString(50, height - 180, "Despatch To")
+        p.drawString(50, height - 195, f"{sale_order.customer_name}")
+        p.drawString(50, height - 210, f"{sale_order.customer_address}")
+        p.drawString(50, height - 225, f"{sale_order.customer_city}, {sale_order.customer_state} - {sale_order.customer_pincode}")
+        p.drawString(50, height - 240, f"GSTIN/UIN: {company.gst_number}")
+        p.drawString(50, height - 255, f"State Name: {sale_order.customer_state}, Code: 29")
+
+        # Add delivery details
+        p.drawString(400, height - 180, "Buyer's Ref./Order No.")
+        p.drawString(400, height - 195, f"{sale_order.sale_order_id}")
+        p.drawString(400, height - 210, "Despatch through")
+        p.drawString(400, height - 225, "By Road")
+        p.drawString(400, height - 240, "Terms of Delivery")
+        p.drawString(400, height - 255, "Ex-Factory Delivery")
 
         # Create table for order items
-        data = [["Item", "Quantity", "Rate", "Total"]]
-        for item in sale_order.items.all():
+        data = [["SI No", "Description of Goods", "HSN/SAC", "Due on", "Quantity", "Rate", "per", "Amount"]]
+        for index, item in enumerate(sale_order.items.all(), start=1):
             data.append([
+                str(index),
                 str(item.item_id),
+                "8471",
+                "3 Days",
                 str(item.quantity),
-                f"₹{item.rate:.2f}",
-                f"₹{item.quantity * item.rate:.2f}"
+                f"{item.rate:.2f}",
+                "Nos",
+                f"{item.quantity * item.rate:.2f}"
             ])
 
-        table = Table(data, colWidths=[2*inch, 1*inch, 1*inch, 1*inch])
+        table = Table(data, colWidths=[0.5*inch, 2*inch, 0.8*inch, 0.8*inch, 0.8*inch, 1*inch, 0.5*inch, 1*inch])
         table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
             ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
@@ -363,27 +385,31 @@ class SaleOrderView(APIView):
         ]))
 
         table.wrapOn(p, width - 100, height)
-        table.drawOn(p, 50, height - 400)
+        table.drawOn(p, 50, height - 500)
 
-        # Add total amount and discount
-        p.setFont("Helvetica-Bold", 12)
-        p.drawString(350, 150, f"Subtotal: ₹{sale_order.total_amount + sale_order.discount:.2f}")
-        p.drawString(350, 135, f"Discount: ₹{sale_order.discount:.2f}")
-        p.drawString(350, 120, f"Total Amount: ₹{sale_order.total_amount:.2f}")
+        # Add total amount and taxes
+        p.setFont("Helvetica-Bold", 10)
+        p.drawString(400, height - 520, f"Subtotal: INR {sale_order.total_amount}")
+        p.drawString(400, height - 535, f"Central Tax: INR {sale_order.total_amount }")
+        p.drawString(400, height - 550, f"State Tax: INR {sale_order.total_amount }")
+        p.drawString(400, height - 565, f"Total: INR {sale_order.total_amount }")
 
-        # Add payment status
+        # Add amount in words
         p.setFont("Helvetica", 10)
-        payment_status = "Paid" if sale_order.payment_received else "Unpaid"
-        p.drawString(50, 100, f"Payment Status: {payment_status}")
+        p.drawString(50, height - 580, f"Amount Chargeable (in words)")
+        p.drawString(50, height - 595, f"INR {num2words(int(sale_order.total_amount )).title()} Only")
 
-        # Add delivery information
-        p.drawString(50, 85, f"Mode of Delivery: {sale_order.get_mode_of_delivery_display()}")
-        if sale_order.mode_of_delivery == 'DELIVERY':
-            p.drawString(50, 70, f"Carrier: {sale_order.get_carrier_display()}")
+        # Add company's bank details
+        p.setFont("Helvetica-Bold", 10)
+        p.drawString(50, height - 640, "Company's Bank Details")
+        p.setFont("Helvetica", 10)
+        p.drawString(50, height - 655, f"Bank Name: {company.bank_name}")
+        p.drawString(50, height - 670, f"A/c No.: {company.bank_account_number}")
+        p.drawString(50, height - 685, f"Branch & IFS Code: {company.ifsc_code}")
 
         # Add footer
         p.setFont("Helvetica", 8)
-        p.drawString(inch, 0.75 * inch, "Thank you for your business!")
+        p.drawString(inch, 0.75 * inch, "This is a Computer Generated Document")
 
         p.showPage()
         p.save()
