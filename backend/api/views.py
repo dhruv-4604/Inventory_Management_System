@@ -489,3 +489,78 @@ class CategoryView(APIView):
         category = get_object_or_404(Category, id=category_id, user=request.user)
         category.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from django.db.models import Sum, F
+from django.utils import timezone
+from .models import SaleOrder, Item, Customer, Vendor, Shipment, SaleOrderItem
+from .serializers import SaleOrderSerializer, ItemSerializer, CustomerSerializer, VendorSerializer, ShipmentSerializer
+
+
+class DashboardView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        # Fetch total revenue
+        total_revenue = SaleOrder.objects.filter(user=user).aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+
+        # Fetch pending shipments
+        pending_shipments = Shipment.objects.filter(user=user, status='IN_TRANSIT').count()
+
+        # Fetch new customers
+        current_month = timezone.now().month
+        current_year = timezone.now().year
+        new_customers = Customer.objects.filter(
+            user=user,
+            created_at__month=current_month,
+            created_at__year=current_year
+        ).count()
+
+        # Fetch top selling products
+        top_selling_products = SaleOrderItem.objects.filter(sale_order__user=user)\
+            .values('item_id')\
+            .annotate(total_quantity=Sum('quantity'))\
+            .order_by('-total_quantity')[:5]
+
+        # Fetch item names for top selling products
+        item_ids = [item['item_id'] for item in top_selling_products]
+        items = Item.objects.filter(item_id__in=item_ids)
+        item_name_map = {item.item_id: item.name for item in items}
+
+        for product in top_selling_products:
+            product['name'] = item_name_map.get(product['item_id'], 'Unknown Item')
+
+        # Fetch stock availability
+        total_stock = Item.objects.filter(user=user).aggregate(Sum('quantity'))['quantity__sum'] or 0
+        low_stock_items = Item.objects.filter(user=user, quantity__lte=F('reorder_point'))
+        out_of_stock_items = Item.objects.filter(user=user, quantity=0)
+
+        # Calculate percentages
+        low_stock_count = low_stock_items.count()
+        out_of_stock_count = out_of_stock_items.count()
+        available_count = Item.objects.filter(user=user).count() - low_stock_count - out_of_stock_count
+
+        total_items = available_count + low_stock_count + out_of_stock_count
+        available_percentage = (available_count / total_items) * 100 if total_items > 0 else 0
+        low_stock_percentage = (low_stock_count / total_items) * 100 if total_items > 0 else 0
+        out_of_stock_percentage = (out_of_stock_count / total_items) * 100 if total_items > 0 else 0
+
+        response_data = {
+            'total_revenue': total_revenue,
+            'pending_shipments': pending_shipments,
+            'new_customers': new_customers,
+            'top_selling_products': list(top_selling_products),
+            'total_stock': total_stock,
+            'low_stock_items': ItemSerializer(low_stock_items, many=True).data,
+            'stock_percentages': {
+                'available': round(available_percentage, 2),
+                'low_stock': round(low_stock_percentage, 2),
+                'out_of_stock': round(out_of_stock_percentage, 2),
+            }
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)

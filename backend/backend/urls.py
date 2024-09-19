@@ -2,7 +2,7 @@ from django.urls import path
 from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
-from api.views import CategoryView, DeleteItemView, CustomerListView, ItemListView, RegisterView, CustomTokenObtainPairView, CustomTokenRefreshView, SaleOrderView, ShipmentListView, UserDetailsAPIView, VendorListView, PurchaseOrderView, CompanyDetailsView
+from api.views import CategoryView, DashboardView, DeleteItemView, CustomerListView, ItemListView, RegisterView, CustomTokenObtainPairView, CustomTokenRefreshView, SaleOrderView, ShipmentListView, UserDetailsAPIView, VendorListView, PurchaseOrderView, CompanyDetailsView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -23,5 +23,6 @@ urlpatterns = [
     path('token/categories/', CategoryView.as_view(), name='categories'),
     path('token/categories/<int:category_id>/', CategoryView.as_view(), name='category-detail'),
     path('company/', CompanyDetailsView.as_view(), name='company-details'),
+    path('token/dashboard/', DashboardView.as_view(), name='dashboard'),
     
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

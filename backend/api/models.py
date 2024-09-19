@@ -79,6 +79,7 @@ class Item(models.Model):
 
 
 class Customer(models.Model):
+    created_at = models.DateTimeField(default=timezone.now)
     customer_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
