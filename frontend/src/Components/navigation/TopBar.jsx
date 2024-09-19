@@ -16,6 +16,7 @@ import {
   Notifications as NotificationsIcon, 
   Add as AddIcon 
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 
 const DRAWER_WIDTH = 260;
 
@@ -33,6 +34,7 @@ const StyledAppBar = styled(AppBar)(({ theme }) => ({
 }));
 
 function TopBar({ title }) {
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const [notifications, setNotifications] = useState([
     { id: 1, message: 'New shipment arrived' },
@@ -46,6 +48,10 @@ function TopBar({ title }) {
 
   const handleNotificationClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleNewOrderClick = () => {
+    navigate('/sales/new_order');
   };
 
   return (
@@ -74,6 +80,7 @@ function TopBar({ title }) {
           <Button
             variant="contained"
             startIcon={<AddIcon />}
+            onClick={handleNewOrderClick}
             sx={{ 
               background: 'linear-gradient(90deg, #D1EA67 , #A6F15A )',
               color: '#232619',
@@ -86,7 +93,7 @@ function TopBar({ title }) {
               fontWeight: 'semibold',
             }}
           >
-            Add Shipment
+            New Order
           </Button>
         </Box>
       </Toolbar>
