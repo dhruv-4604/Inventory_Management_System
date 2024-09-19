@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Box, Typography, TextField, Button, Paper, Grid, Avatar, Tabs, Tab, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle 
+  Box, Typography, TextField, Button, Paper, Grid, Avatar, Tabs, Tab, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton 
 } from '@mui/material';
+import { PhotoCamera } from '@mui/icons-material'; // Import the PhotoCamera icon
 import api from '../../api';
 import Sidebar from '../navigation/SideBar';
+import { styled } from "@mui/system";
+
 
 function Settings() {
   const [userData, setUserData] = useState({
@@ -19,11 +22,17 @@ function Settings() {
     city: '',
     state: '',
     pincode: '',
+    company_logo: '', // Add logo_url to userData
   });
   const [activeTab, setActiveTab] = useState(0);
   const [openDialog, setOpenDialog] = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    // Handle file upload logic here
+  };
 
   useEffect(() => {
     async function fetchUserData() {
@@ -64,13 +73,19 @@ function Settings() {
       setError('Failed to update details. Please check your password and try again.');
     }
   };
-
+  const SquareImage = styled('img')({
+    width: '200px',
+    height: '200px', // Make height equal to width for a perfect circle
+    objectFit: 'cover', // Ensure the image covers the entire area
+    borderRadius: '50%', // Change to 50% for a round shape
+    border: '2px solid #000', // Add a border
+  });
+  
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%' }}>
       <Sidebar />
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-        <Typography variant="h4" gutterBottom>Settings</Typography>
-        <Paper elevation={3} sx={{ p: 3, mt: 2 }}>
+      <Box component="main" sx={{ flexGrow: 1, p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+        <Paper elevation={3} sx={{ p: 3, mt: 2, width: '100%', maxWidth: 1200 }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
             <Tabs value={activeTab} onChange={handleTabChange} centered>
               <Tab label="Personal Details" />
@@ -97,6 +112,7 @@ function Settings() {
                       name="email"
                       value={userData.email}
                       onChange={handleInputChange}
+                      disabled
                     />
                   </Grid>
                   <Grid item xs={12}>
@@ -112,6 +128,30 @@ function Settings() {
               )}
               {activeTab === 1 && (
                 <Grid container spacing={3}>
+                  <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center', mb: 3, position: 'relative' }}>
+                    <SquareImage
+                      alt="Company Logo"
+                      src={"http://127.0.0.1:8000/"+userData.company_logo}
+                      sx={{ width: 100, height: 100 }}
+                    />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      style={{ display: 'none' }}
+                      id="icon-button-file"
+                    />
+                    <label htmlFor="icon-button-file">
+                      <IconButton
+                        color="primary"
+                        aria-label="upload picture"
+                        component="span"
+                        sx={{ position: 'absolute', bottom: 0, right: 0 }}
+                      >
+                        <PhotoCamera />
+                      </IconButton>
+                    </label>
+                  </Grid>
                   <Grid item xs={12}>
                     <TextField
                       fullWidth

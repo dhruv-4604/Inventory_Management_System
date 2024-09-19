@@ -205,6 +205,7 @@ class Company(models.Model):
     bank_name = models.CharField(max_length=100, blank=True, null=True)
     bank_account_number = models.CharField(max_length=20, blank=True, null=True)
     ifsc_code = models.CharField(max_length=11, blank=True, null=True)
+    company_logo = models.ImageField(upload_to='company_logos/', null=True, blank=True)  # New field
 
     def __str__(self):
         return self.company_name

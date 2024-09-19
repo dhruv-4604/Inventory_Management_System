@@ -16,7 +16,6 @@ import ItemPage from "./Components/inventory/ItemPage.jsx";
 import SignInPage from "./Components/login/SignInPage.jsx";
 import SignUpPage from "./Components/login/SignUpPage.jsx";
 import "./fonts.css";
-import InvoiceGenerator from "./Components/sales/InvoiceGenerator.jsx";
 import CustomerPage from "./Components/sales/CustomerPage.jsx";
 import SalesOrderPage from "./Components/sales/SaleOrdersPage.jsx";
 import ShipmentsPage from "./Components/sales/ShipmentsPage.jsx";
@@ -67,6 +66,7 @@ function MainContent() {
     if (location.pathname.includes("/Purchases/Purchase_Orders"))
       return "Purchase Orders";
     if (location.pathname.includes("/Purchases/vendors")) return "Vendors";
+    if (location.pathname.includes("/settings")) return "Settings";
     // Add more conditions for other routes
     return "SupplySync";
   };
@@ -102,6 +102,7 @@ function MainContent() {
             element={<PurchaseOrdersPage />}
           />
           <Route path="purchases/vendors" element={<VendorsPage />} />
+          <Route path="/settings" element={<Settings />} />
         </Routes>
       </Box>
     </ProtectedRoute>
@@ -125,7 +126,6 @@ function App() {
             <Route path="/signin" element={<SignInPage />} />
             <Route path="/signup" element={<SignUpPage />} />
             <Route path="*" element={<MainContent />} />
-            <Route path="/settings" element={<Settings />} />
           </Routes>
         </Box>
       </Router>

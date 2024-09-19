@@ -52,6 +52,7 @@ class UserDetailsAPIView(generics.GenericAPIView):
                 'bank_name': '',
                 'bank_account_number': '',
                 'ifsc_code': '',
+                'company_logo': None,  # Default value for company_logo
             }
 
         # Combine user and company data
@@ -315,11 +316,15 @@ class SaleOrderView(APIView):
         width, height = letter
 
         # Set up the PDF
+        company = Company.objects.get(user=sale_order.user)
+        if company.company_logo:
+            logo_path = company.company_logo.path
+            p.drawImage(logo_path, 50, height - 100, width=100, height=50)  # Adjust the size and position as needed
+
         p.setFont("Helvetica-Bold", 16)
         p.drawString(50, height - 50, "Max Electronics")
 
         # Add company details
-        company = Company.objects.get(user=sale_order.user)
         p.setFont("Helvetica", 10)
         p.drawString(50, height - 70, f"A 204,Shivaji Nagar, Bengaluru")
         p.drawString(50, height - 85, f"GSTIN/UIN: {company.gst_number}")

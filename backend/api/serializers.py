@@ -9,9 +9,9 @@ User = get_user_model()
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
-        fields = ['company_name', 'gst_number', 'address', 'city', 'state', 'pincode', 'bank_name', 'bank_account_number', 'ifsc_code']
+        fields = ['company_name', 'gst_number', 'address', 'city', 'state', 'pincode', 'bank_name', 'bank_account_number', 'ifsc_code', 'company_logo']  # Updated fields
      
-     
+
 class CustomUserSerializer(serializers.ModelSerializer):
     company = CompanySerializer(required=False)
     password = serializers.CharField(write_only=True)
