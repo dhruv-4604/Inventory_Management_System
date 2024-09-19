@@ -16,7 +16,7 @@ const SaleOrdersPage = () => {
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(110);
   const [isLoading, setIsLoading] = useState(true);
 
   const navigate = useNavigate();
@@ -81,14 +81,6 @@ const SaleOrdersPage = () => {
     navigate('/sales/new_order');
   };
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
 
   const buttonStyle = {
     background: 'linear-gradient(90deg, #D1EA67 , #A6F15A )',

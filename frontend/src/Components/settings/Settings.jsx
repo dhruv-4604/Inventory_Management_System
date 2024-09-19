@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { 
   Box, Typography, TextField, Button, Paper, Grid, Avatar, Tabs, Tab, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton 
 } from '@mui/material';
-import { PhotoCamera } from '@mui/icons-material'; // Import the PhotoCamera icon
+import { PhotoCamera } from '@mui/icons-material';
 import api from '../../api';
 import Sidebar from '../navigation/SideBar';
 import { styled } from "@mui/system";
-
 
 function Settings() {
   const [userData, setUserData] = useState({
@@ -22,29 +21,37 @@ function Settings() {
     city: '',
     state: '',
     pincode: '',
-    company_logo: '', // Add logo_url to userData
+    company_logo: null,
   });
   const [activeTab, setActiveTab] = useState(0);
   const [openDialog, setOpenDialog] = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [logoPreview, setLogoPreview] = useState(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const userRes = await api.get('/token/user/');
+        const companyRes = await api.get('/company/');
+        setUserData({ ...userRes.data, ...companyRes.data });
+        if (companyRes.data.company_logo) {
+          setLogoPreview(`http://127.0.0.1:8000${companyRes.data.company_logo}`);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    }
+    fetchData();
+  }, []);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    // Handle file upload logic here
-  };
-
-  useEffect(() => {
-    async function fetchUserData() {
-      try {
-        const res = await api.get('/token/user/');
-        setUserData(res.data);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      }
+    if (file) {
+      setUserData(prevData => ({ ...prevData, company_logo: file }));
+      setLogoPreview(URL.createObjectURL(file));
     }
-    fetchUserData();
-  }, []);
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -55,30 +62,59 @@ function Settings() {
     setActiveTab(newValue);
   };
 
-  const handleSubmit = async (e) => {
+  const handlePersonalDetailsSubmit = async (e) => {
+    e.preventDefault();
+    setOpenDialog(true);
+  };
+
+  const handleCompanyDetailsSubmit = async (e) => {
     e.preventDefault();
     setOpenDialog(true);
   };
 
   const handleConfirmSubmit = async () => {
     try {
-      const res = await api.put('/token/user/', { ...userData, password });
-      setUserData(res.data);
+      let res;
+      if (activeTab === 0) {
+        // Update personal details
+        res = await api.put('/token/user/', {
+          name: userData.name,
+          phone_number: userData.phone_number,
+          password: password
+        });
+      } else {
+        // Update company details
+        const formData = new FormData();
+        Object.keys(userData).forEach(key => {
+          if (key === 'company_logo' && userData[key] instanceof File) {
+            formData.append(key, userData[key]);
+          } else if (key !== 'company_logo') {
+            formData.append(key, userData[key]);
+          }
+        });
+        res = await api.put('/company/', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+      }
+      setUserData(prevData => ({ ...prevData, ...res.data }));
       setOpenDialog(false);
       setPassword('');
       setError('');
-      alert('Details updated successfully!');
+      alert(activeTab === 0 ? 'Personal details updated successfully!' : 'Company details updated successfully!');
     } catch (error) {
-      console.error('Error updating user data:', error);
-      setError('Failed to update details. Please check your password and try again.');
+      console.error('Error updating data:', error);
+      setError('Failed to update details. Please try again.');
     }
   };
+
   const SquareImage = styled('img')({
     width: '200px',
-    height: '200px', // Make height equal to width for a perfect circle
-    objectFit: 'cover', // Ensure the image covers the entire area
-    borderRadius: '50%', // Change to 50% for a round shape
-    border: '2px solid #000', // Add a border
+    height: '200px',
+    objectFit: 'cover',
+    borderRadius: '50%',
+    border: '2px solid #000',
   });
   
   return (
@@ -92,7 +128,7 @@ function Settings() {
               <Tab label="Company Details" />
             </Tabs>
           </Box>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={activeTab === 0 ? handlePersonalDetailsSubmit : handleCompanyDetailsSubmit}>
             <Box sx={{ mt: 3 }}>
               {activeTab === 0 && (
                 <Grid container spacing={3}>
@@ -131,7 +167,7 @@ function Settings() {
                   <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center', mb: 3, position: 'relative' }}>
                     <SquareImage
                       alt="Company Logo"
-                      src={"http://127.0.0.1:8000/"+userData.company_logo}
+                      src={logoPreview || "http://127.0.0.1:8000/media/default_logo.png"}
                       sx={{ width: 100, height: 100 }}
                     />
                     <input
@@ -146,7 +182,7 @@ function Settings() {
                         color="primary"
                         aria-label="upload picture"
                         component="span"
-                        sx={{ position: 'absolute', bottom: 0, right: 0 }}
+                        sx={{ position: 'absolute', bottom: 70, right:500}}
                       >
                         <PhotoCamera />
                       </IconButton>
@@ -238,7 +274,7 @@ function Settings() {
             </Box>
             <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
               <Button type="submit" variant="contained" color="primary">
-                Save Changes
+                {activeTab === 0 ? 'Save Personal Details' : 'Save Company Details'}
               </Button>
             </Box>
           </form>

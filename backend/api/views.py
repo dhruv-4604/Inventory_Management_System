@@ -1,13 +1,59 @@
+from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
+from django.core.mail import EmailMessage
+from django.conf import settings
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny,IsAuthenticated
-from django.contrib.auth import get_user_model, authenticate
-from django.contrib.auth.models import AbstractBaseUser
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from .serializers import CustomUserSerializer, CustomTokenObtainPairSerializer, ShipmentSerializer, CompanySerializer
-
+from io import BytesIO
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.platypus import Table, TableStyle
+from reportlab.lib.units import inch
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import Paragraph, Spacer
+from num2words import num2words
+from .models import (
+    Company, SaleOrderItem, Item, Customer, Vendor, SaleOrder, 
+    PurchaseOrder, Shipment, Category
+)
+from .serializers import (
+    CustomUserSerializer, CustomTokenObtainPairSerializer, ShipmentSerializer, 
+    CompanySerializer, ItemSerializer, CustomerSerializer, VendorSerializer, 
+    SaleOrderSerializer, PurchaseOrderSerializer, CategorySerializer
+)
 
 User = get_user_model()
+
+class CompanyDetailsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            company = Company.objects.get(user=request.user)
+            serializer = CompanySerializer(company)
+            return Response(serializer.data)
+        except Company.DoesNotExist:
+            return Response({"error": "Company details not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def put(self, request):
+        try:
+            company = Company.objects.get(user=request.user)
+            serializer = CompanySerializer(company, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Company.DoesNotExist:
+            serializer = CompanySerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save(user=request.user)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -21,10 +67,6 @@ class RegisterView(generics.CreateAPIView):
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-from .models import Company, SaleOrderItem
-from .serializers import CompanySerializer
 
 class UserDetailsAPIView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
@@ -59,64 +101,11 @@ class UserDetailsAPIView(generics.GenericAPIView):
         response_data = {**user_data, **company_data}
         return Response(response_data, status=status.HTTP_200_OK)
 
-    # def put(self, request):
-    #     user = request.user
-    #     password = request.data.get('password')
-
-    #     if not password:
-    #         return Response({"error": "Password is required to save changes."}, status=status.HTTP_400_BAD_REQUEST)
-
-    #     if not user.check_password(password):
-    #         return Response({"error": "Incorrect password."}, status=status.HTTP_400_BAD_REQUEST)
-
-    #     user_serializer = self.get_serializer(user, data=request.data, partial=True)
-        
-    #     if user_serializer.is_valid():
-    #         user_serializer.save()
-
-    #         # Update or create company details
-    #         company_data = {
-    #             'company_name': request.data.get('company_name', ''),
-    #             'gst_number': request.data.get('gst_number', ''),
-    #             'phone_number': request.data.get('phone_number', user.phone_number),
-    #             'address': request.data.get('address', ''),
-    #             'city': request.data.get('city', ''),
-    #             'state': request.data.get('state', ''),
-    #             'pincode': request.data.get('pincode', ''),
-    #             'bank_name': request.data.get('bank_name', ''),
-    #             'bank_account_number': request.data.get('bank_account_number', ''),
-    #             'ifsc_code': request.data.get('ifsc_code', ''),
-    #         }
-
-    #         company, created = Company.objects.update_or_create(
-    #             user=user,
-    #             defaults=company_data
-    #         )
-
-    #         # Combine user and company data for response
-    #         response_data = {**user_serializer.data, **CompanySerializer(company).data}
-    #         return Response(response_data, status=status.HTTP_200_OK)
-        
-    #     return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
-
-
 class CustomTokenRefreshView(TokenRefreshView):
-    # If you need custom behavior for token refresh, override methods here
     pass
-
-
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
-from django.shortcuts import get_object_or_404
-from .models import Item
-from .serializers import ItemSerializer
 
 class ItemListView(APIView):
     permission_classes = [IsAuthenticated]
@@ -160,14 +149,6 @@ class DeleteItemView(APIView):
         item.delete()
         return Response({"message": "Item deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
-
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
-from .models import Customer
-from .serializers import CustomerSerializer
-
 class CustomerListView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -196,10 +177,6 @@ class CustomerListView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-from .models import Vendor
-from .serializers import VendorSerializer
-
 class VendorListView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -216,37 +193,6 @@ class VendorListView(APIView):
            serializer.save()
            return Response(serializer.data, status=status.HTTP_201_CREATED)
        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
-from .models import SaleOrder, Item
-from .serializers import SaleOrderSerializer
-from io import BytesIO
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
-from reportlab.lib import colors
-from reportlab.platypus import Table, TableStyle
-from django.core.files.base import ContentFile
-
-
-from django.core.mail import send_mail, EmailMessage
-from django.conf import settings
-from reportlab.lib.units import inch
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import Paragraph, Spacer
-from .models import Company
-
-
-
-
-
-
-from reportlab.lib.units import inch
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import Paragraph, Spacer
-from num2words import num2words
 
 class SaleOrderView(APIView):
     permission_classes = [IsAuthenticated]
@@ -307,9 +253,6 @@ class SaleOrderView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    
-
-
     def generate_invoice_pdf(self, sale_order):
         buffer = BytesIO()
         p = canvas.Canvas(buffer, pagesize=letter)
@@ -317,9 +260,9 @@ class SaleOrderView(APIView):
 
         # Set up the PDF
         company = Company.objects.get(user=sale_order.user)
-        if company.company_logo:
-            logo_path = company.company_logo.path
-            p.drawImage(logo_path, 50, height - 100, width=100, height=50)  # Adjust the size and position as needed
+        # if company.company_logo:
+        #     logo_path = company.company_logo.path
+        #     p.drawImage(logo_path, 50, height - 100, width=100, height=50)  # Adjust the size and position as needed
 
         p.setFont("Helvetica-Bold", 16)
         p.drawString(50, height - 50, "Max Electronics")
@@ -432,12 +375,6 @@ class SaleOrderView(APIView):
         mail.attach_file(f"{settings.BASE_DIR}/media/invoices/invoice_{sale_order.sale_order_id}.pdf")
         mail.send()
 
-
-
-
-
-
-
     def get(self, request):
         sale_orders = SaleOrder.objects.filter(user=request.user)
         serializer = SaleOrderSerializer(sale_orders, many=True)
@@ -453,12 +390,6 @@ class SaleOrderView(APIView):
 
         serializer = SaleOrderSerializer(sale_order)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-    # def send_invoice_email(self):
-       
-
-from .models import PurchaseOrder, Item
-from .serializers import PurchaseOrderSerializer
 
 class PurchaseOrderView(APIView):
     permission_classes = [IsAuthenticated]
@@ -502,13 +433,6 @@ class PurchaseOrderView(APIView):
         serializer = PurchaseOrderSerializer(purchase_order)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
-from .models import Shipment
-from .serializers import ShipmentSerializer
-
 class ShipmentListView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -529,15 +453,6 @@ class ShipmentListView(APIView):
 
         serializer = ShipmentSerializer(shipment)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
-from django.shortcuts import get_object_or_404
-from .models import Category, Item
-from .serializers import CategorySerializer
 
 class CategoryView(APIView):
     permission_classes = [IsAuthenticated]
