@@ -80,10 +80,10 @@ function Settings() {
         res = await api.put('/token/user/', {
           name: userData.name,
           phone_number: userData.phone_number,
-          password: password // This is for authentication, not for updating
+          password: password
         });
       } else {
-        // Update company details (no changes needed here)
+        // Update company details
         const formData = new FormData();
         Object.keys(userData).forEach(key => {
           if (key === 'company_logo' && userData[key] instanceof File) {
@@ -105,7 +105,7 @@ function Settings() {
       alert(activeTab === 0 ? 'Personal details updated successfully!' : 'Company details updated successfully!');
     } catch (error) {
       console.error('Error updating data:', error);
-      setError('Failed to update details. Please check your password and try again.');
+      setError('Failed to update details. Please try again.');
     }
   };
 

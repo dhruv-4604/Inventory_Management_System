@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box, Button, TextField, Typography, Select, MenuItem, FormControl, InputLabel,
-  Autocomplete, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper
+  Autocomplete, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
+  Snackbar, CircularProgress
 } from '@mui/material';
+import MuiAlert from '@mui/material/Alert';
 import api from "../../api";
 
 const CustomerForm = ({ customers, order, onOrderChange }) => {
@@ -91,19 +93,13 @@ const CustomerForm = ({ customers, order, onOrderChange }) => {
         </Select>
       </FormControl>
       {order.orderMode === 'DELIVERY' && (
-        <FormControl fullWidth margin="normal">
-          <InputLabel>Courier Partner</InputLabel>
-          <Select
-            value={order.courierPartner}
-            onChange={(e) => onOrderChange('courierPartner', e.target.value)}
-          >
-            <MenuItem value="FEDEX">FedEx</MenuItem>
-            <MenuItem value="UPS">UPS</MenuItem>
-            <MenuItem value="USPS">USPS</MenuItem>
-            <MenuItem value="DHL">DHL</MenuItem>
-            <MenuItem value="OTHER">Other</MenuItem>
-          </Select>
-        </FormControl>
+        <TextField
+          fullWidth
+          label="Courier Partner"
+          value={order.courierPartner}
+          onChange={(e) => onOrderChange('courierPartner', e.target.value)}
+          margin="normal"
+        />
       )}
     </Box>
   );
@@ -232,11 +228,17 @@ const NewSaleOrderPage = () => {
     state: '',
     city: '',
     pincode: '',
-    courierPartner: 'OTHER',
+    courierPartner: '',
     paymentStatus: 'Due',
     discount: 0
   });
   const [selectedItems, setSelectedItems] = useState(new Set());
+  const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -329,9 +331,15 @@ const NewSaleOrderPage = () => {
 
   const handleSaveOrder = async () => {
     if (!isOrderValid()) {
-      console.error('Cannot save order: Please select a customer and add at least one item.');
+      setSnackbar({
+        open: true,
+        message: 'Please select a customer and add at least one item.',
+        severity: 'error'
+      });
       return;
     }
+
+    setLoading(true);
 
     let customerId = order.customerId;
 
@@ -353,6 +361,12 @@ const NewSaleOrderPage = () => {
           customerId = newCustomerResponse.data.customer_id;
         } catch (error) {
           console.error('Failed to add new customer:', error);
+          setSnackbar({
+            open: true,
+            message: 'Failed to add new customer. Please try again.',
+            severity: 'error'
+          });
+          setLoading(false);
           return;
         }
       }
@@ -378,15 +392,32 @@ const NewSaleOrderPage = () => {
       total_amount: calculateTotal()
     };
 
-    console.log('Order data to be sent to backend:', orderData);
-
     try {
       const response = await api.post('/token/saleorders/', orderData);
       console.log('Server response:', response.data);
-      navigate('/sales/sale_orders');
+      setSnackbar({
+        open: true,
+        message: 'Order saved successfully!',
+        severity: 'success'
+      });
+      setTimeout(() => navigate('/sales/sale_orders'), 2000);
     } catch (error) {
       console.error('Error saving order:', error.response ? error.response.data : error.message);
+      setSnackbar({
+        open: true,
+        message: 'Failed to save order. Please try again.',
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSnackbar({ ...snackbar, open: false });
   };
 
   return (
@@ -419,11 +450,27 @@ const NewSaleOrderPage = () => {
         <Button 
           variant="contained" 
           onClick={handleSaveOrder}
-          disabled={!isOrderValid()}
+          disabled={!isOrderValid() || loading}
+          startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
         >
-          Save Order
+          {loading ? 'Saving...' : 'Save Order'}
         </Button>
       </Box>
+      <Snackbar 
+        open={snackbar.open} 
+        autoHideDuration={6000} 
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <MuiAlert 
+          elevation={6} 
+          variant="filled" 
+          onClose={handleCloseSnackbar} 
+          severity={snackbar.severity}
+        >
+          {snackbar.message}
+        </MuiAlert>
+      </Snackbar>
     </Box>
   );
 };

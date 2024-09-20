@@ -199,7 +199,7 @@ const Dashboard = () => {
               </Box>
               <br></br>
               <Typography variant="subtitle2" gutterBottom>Low Stock</Typography>
-              {dashboardData.low_stock_items.map((item, index) => (
+              {dashboardData.low_stock_items.slice(0, 5).map((item, index) => (
                 <Box key={index} display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                   <Box>
                     <Typography variant="body2">{item.name}</Typography>

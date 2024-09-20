@@ -302,7 +302,7 @@ function ItemPage() {
                   onClick={() => handleItemClick(item)}
                 >
                   {columnMap.map((column) => (
-                    <TableCell key={column.key} align={column.align} sx={{ padding: "12px 16px" }}>
+                    <TableCell key={column.key} align={column.align} sx={{ padding: "10px 16px" }}>
                       {column.key === "image" ? (
                         <SquareImage 
                           src={item[column.key] ? `http://127.0.0.1:8000${item[column.key]}` : NoProductListImage} 

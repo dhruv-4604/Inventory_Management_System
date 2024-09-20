@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Button, TextField, InputAdornment, Modal, Typography,
-  Grid, Select, MenuItem, FormControl, InputLabel, FormHelperText
+  Grid, Select, MenuItem, FormControl, InputLabel, FormHelperText,
+  TablePagination
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import SortIcon from '@mui/icons-material/Sort';
@@ -28,6 +29,10 @@ const CustomerPage = () => {
   const [errors, setErrors] = useState({});
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [sortField, setSortField] = useState('name');
+  const [sortOrder, setSortOrder] = useState('asc');
 
   useEffect(() => {
     fetchCustomers();
@@ -150,6 +155,35 @@ const CustomerPage = () => {
     }
   };
 
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleSort = (field) => {
+    const isAsc = sortField === field && sortOrder === 'asc';
+    setSortOrder(isAsc ? 'desc' : 'asc');
+    setSortField(field);
+  };
+
+  const sortedAndFilteredCustomers = useMemo(() => {
+    return customers
+      .sort((a, b) => {
+        if (a[sortField] < b[sortField]) return sortOrder === 'asc' ? -1 : 1;
+        if (a[sortField] > b[sortField]) return sortOrder === 'asc' ? 1 : -1;
+        return 0;
+      })
+      .filter(customer =>
+        customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        customer.phone_number.includes(searchTerm)
+      );
+  }, [customers, sortField, sortOrder, searchTerm]);
+
   return (
     <Box sx={{ width: '100%', p: 2 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, alignItems: 'center' }}>
@@ -196,33 +230,59 @@ const CustomerPage = () => {
         <Table sx={{ minWidth: 650 }} aria-label="customer table">
           <TableHead>
             <TableRow sx={{ backgroundColor: '#F9FAFB' }}>
-              <TableCell sx={{ fontWeight: 'bold' }}>NAME</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>EMAIL</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>PHONE NUMBER</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>ADDRESS</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>STATE</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>CITY</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>PINCODE</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }} onClick={() => handleSort('name')}>
+                NAME {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
+              </TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }} onClick={() => handleSort('email')}>
+                EMAIL {sortField === 'email' && (sortOrder === 'asc' ? '↑' : '↓')}
+              </TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }} onClick={() => handleSort('phone_number')}>
+                PHONE NUMBER {sortField === 'phone_number' && (sortOrder === 'asc' ? '↑' : '↓')}
+              </TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }} onClick={() => handleSort('address')}>
+                ADDRESS {sortField === 'address' && (sortOrder === 'asc' ? '↑' : '↓')}
+              </TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }} onClick={() => handleSort('state')}>
+                STATE {sortField === 'state' && (sortOrder === 'asc' ? '↑' : '↓')}
+              </TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }} onClick={() => handleSort('city')}>
+                CITY {sortField === 'city' && (sortOrder === 'asc' ? '↑' : '↓')}
+              </TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }} onClick={() => handleSort('pincode')}>
+                PINCODE {sortField === 'pincode' && (sortOrder === 'asc' ? '↑' : '↓')}
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {customers.map((customer) => (
-              <TableRow
-                key={customer.customer_id}
-                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-              >
-                <TableCell>{customer.name}</TableCell>
-                <TableCell>{customer.email}</TableCell>
-                <TableCell>{customer.phone_number}</TableCell>
-                <TableCell>{customer.address}</TableCell>
-                <TableCell>{customer.state}</TableCell>
-                <TableCell>{customer.city}</TableCell>
-                <TableCell>{customer.pincode}</TableCell>
-              </TableRow>
-            ))}
+            {sortedAndFilteredCustomers
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .map((customer) => (
+                <TableRow
+                  key={customer.customer_id}
+                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                >
+                  <TableCell>{customer.name}</TableCell>
+                  <TableCell>{customer.email}</TableCell>
+                  <TableCell>{customer.phone_number}</TableCell>
+                  <TableCell>{customer.address}</TableCell>
+                  <TableCell>{customer.state}</TableCell>
+                  <TableCell>{customer.city}</TableCell>
+                  <TableCell>{customer.pincode}</TableCell>
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
       </TableContainer>
+
+      <TablePagination
+        rowsPerPageOptions={[5, 10, 25]}
+        component="div"
+        count={sortedAndFilteredCustomers.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
 
       <Modal
         open={isModalOpen}

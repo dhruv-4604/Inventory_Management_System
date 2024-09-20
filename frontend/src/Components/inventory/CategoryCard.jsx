@@ -254,6 +254,14 @@ const CategoryCard = ({ category, items, onItemsUpdated, onCategoryDeleted }) =>
     item.name.toLowerCase().includes(itemSearchTerm.toLowerCase())
   );
 
+  // Add this function to get the top-selling product
+  const getTopSellingProduct = () => {
+    if (categoryItems.length === 0) return "No products";
+    return categoryItems.reduce((max, item) => 
+      (item.sold_quantity > max.sold_quantity) ? item : max
+    ).name;
+  };
+
   return (
     <>
       <StyledCard onClick={handleCardClick} sx={{ cursor: 'pointer' }}>
@@ -269,7 +277,7 @@ const CategoryCard = ({ category, items, onItemsUpdated, onCategoryDeleted }) =>
           </CategoryName>
           <TopSellingBox>
             <TopSellingLabel>Top Selling Product</TopSellingLabel>
-            <TopSellingProduct>&nbsp;{category.topSelling}</TopSellingProduct>
+            <TopSellingProduct>{getTopSellingProduct()}</TopSellingProduct>
           </TopSellingBox>
           <ButtonContainer>
             <ProductCountButton variant="contained" onClick={(e) => {

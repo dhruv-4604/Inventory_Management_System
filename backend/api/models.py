@@ -197,15 +197,15 @@ class Shipment(models.Model):
 
 class Company(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='company')
-    company_name = models.CharField(max_length=255)
-    gst_number = models.CharField(max_length=15, blank=True, null=True)
-    address = models.TextField(blank=True, null=True)
-    city = models.CharField(max_length=100, blank=True, null=True)
-    state = models.CharField(max_length=100, blank=True, null=True)
-    pincode = models.CharField(max_length=10, blank=True, null=True)
-    bank_name = models.CharField(max_length=100, blank=True, null=True)
-    bank_account_number = models.CharField(max_length=20, blank=True, null=True)
-    ifsc_code = models.CharField(max_length=11, blank=True, null=True)
+    company_name = models.CharField(max_length=255,default="My Company")
+    gst_number = models.CharField(max_length=15, blank=True, null=True,default="VAT0000")
+    address = models.TextField(blank=True, null=True,default=" ")
+    city = models.CharField(max_length=100, blank=True, null=True,default=" ")
+    state = models.CharField(max_length=100, blank=True, null=True,default=" ")
+    pincode = models.CharField(max_length=10, blank=True, null=True,default=" ")
+    bank_name = models.CharField(max_length=100, blank=True, null=True,default="My Bank")
+    bank_account_number = models.CharField(max_length=20, blank=True, null=True,default="124567890")
+    ifsc_code = models.CharField(max_length=11, blank=True, null=True,default=" ")
     company_logo = models.ImageField(upload_to='company_logos/', null=True, blank=True)  # New field
 
     def __str__(self):
