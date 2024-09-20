@@ -10,7 +10,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Checkbox,
   InputAdornment
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
@@ -123,9 +122,6 @@ const PriceListPage = () => {
         <Table sx={{ minWidth: 650 }} aria-label="price list table">
           <TableHead>
             <TableRow sx={{ backgroundColor: '#F9FAFB' }}>
-              <TableCell padding="checkbox">
-                <Checkbox color="primary" />
-              </TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>NAME</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>QUANTITY</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>CATEGORY</TableCell>
@@ -139,9 +135,6 @@ const PriceListPage = () => {
                 key={item.id}
                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
               >
-                <TableCell padding="checkbox">
-                  <Checkbox color="primary" />
-                </TableCell>
                 <TableCell>{item.name}</TableCell>
                 <TableCell>{item.quantity}</TableCell>
                 <TableCell>{categories[item.category] || 'Unknown'}</TableCell>

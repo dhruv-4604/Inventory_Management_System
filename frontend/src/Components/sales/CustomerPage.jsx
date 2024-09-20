@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Checkbox, Button, TextField, InputAdornment, Modal, Typography,
+  Paper, Button, TextField, InputAdornment, Modal, Typography,
   Grid, Select, MenuItem, FormControl, InputLabel, FormHelperText
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
@@ -196,9 +196,6 @@ const CustomerPage = () => {
         <Table sx={{ minWidth: 650 }} aria-label="customer table">
           <TableHead>
             <TableRow sx={{ backgroundColor: '#F9FAFB' }}>
-              <TableCell padding="checkbox">
-                <Checkbox color="primary" />
-              </TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>NAME</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>EMAIL</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>PHONE NUMBER</TableCell>
@@ -214,9 +211,6 @@ const CustomerPage = () => {
                 key={customer.customer_id}
                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
               >
-                <TableCell padding="checkbox">
-                  <Checkbox color="primary" />
-                </TableCell>
                 <TableCell>{customer.name}</TableCell>
                 <TableCell>{customer.email}</TableCell>
                 <TableCell>{customer.phone_number}</TableCell>

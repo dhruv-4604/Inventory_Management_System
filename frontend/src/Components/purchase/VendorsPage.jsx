@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import {
   Box,
   TextField,
@@ -12,15 +11,12 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Checkbox,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
+  Typography,
+  Grid,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import SortIcon from '@mui/icons-material/Sort';
@@ -35,7 +31,10 @@ const VendorsPage = () => {
     name: '',
     email: '',
     phone_number: '',
-    address: '',  // New field
+    address: '',
+    state: '',
+    city: '',
+    pincode: '',
   });
 
   useEffect(() => {
@@ -71,7 +70,10 @@ const VendorsPage = () => {
       name: '',
       email: '',
       phone_number: '',
-      address: '',  // New field
+      address: '',
+      state: '',
+      city: '',
+      pincode: '',
     });
   };
 
@@ -86,9 +88,23 @@ const VendorsPage = () => {
     }
   };
 
+  const buttonStyle = {
+    background: 'linear-gradient(90deg, #D1EA67 , #A6F15A )',
+    color: '#232619',
+    boxShadow: 'none',
+    '&:hover': {
+      background: 'linear-gradient(90deg, #C1DA57 , #96E14A )',
+      boxShadow: 'none'
+    },
+    textTransform: 'none',
+    fontWeight: 'semibold',
+    padding: '6px 16px',
+    height: '36px',
+  };
+
   return (
     <Box sx={{ width: '100%', p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, alignItems: 'center' }}>
         <TextField 
           variant="outlined"
           placeholder="Search vendor"
@@ -103,7 +119,7 @@ const VendorsPage = () => {
             ),
           }}
           sx={{
-            width: '300px',
+            width: '40%',
             '& .MuiOutlinedInput-root': {
               borderRadius: '8px',
               backgroundColor: '#F3F4F6',
@@ -116,12 +132,7 @@ const VendorsPage = () => {
             variant="contained"
             startIcon={<SortIcon />}
             onClick={handleSort}
-            sx={{
-              mr: 1,
-              backgroundColor: '#D9F99D',
-              color: '#000',
-              '&:hover': { backgroundColor: '#BEF264' },
-            }}
+            sx={{ ...buttonStyle, mr: 2 }}
           >
             Sort
           </Button>
@@ -129,40 +140,36 @@ const VendorsPage = () => {
             variant="contained"
             startIcon={<AddIcon />}
             onClick={handleOpenDialog}
-            sx={{
-              backgroundColor: '#D9F99D',
-              color: '#000',
-              '&:hover': { backgroundColor: '#BEF264' },
-            }}
+            sx={buttonStyle}
           >
             Add Vendor
           </Button>
         </Box>
       </Box>
 
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #E5E7EB' }}>
         <Table sx={{ minWidth: 650 }} aria-label="vendors table">
           <TableHead>
-            <TableRow>
-              <TableCell padding="checkbox">
-                <Checkbox />
-              </TableCell>
-              <TableCell>NAME</TableCell>
-              <TableCell>EMAIL</TableCell>
-              <TableCell>PHONE NUMBER</TableCell>
-              <TableCell>ADDRESS</TableCell>  {/* New column */}
+            <TableRow sx={{ backgroundColor: '#F9FAFB' }}>
+              <TableCell sx={{ fontWeight: 'bold' }}>NAME</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>EMAIL</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>PHONE NUMBER</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>ADDRESS</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>STATE</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>CITY</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>PINCODE</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {vendors.map((vendor) => (
-              <TableRow key={vendor.vendor_id}>
-                <TableCell padding="checkbox">
-                  <Checkbox />
-                </TableCell>
+              <TableRow key={vendor.vendor_id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                 <TableCell>{vendor.name}</TableCell>
                 <TableCell>{vendor.email}</TableCell>
                 <TableCell>{vendor.phone_number}</TableCell>
-                <TableCell>{vendor.address}</TableCell>  {/* New cell */}
+                <TableCell>{vendor.address}</TableCell>
+                <TableCell>{vendor.state}</TableCell>
+                <TableCell>{vendor.city}</TableCell>
+                <TableCell>{vendor.pincode}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -172,42 +179,70 @@ const VendorsPage = () => {
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>Add New Vendor</DialogTitle>
         <DialogContent>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2 }}>
-            <TextField
-              label="Name"
-              value={newVendor.name}
-              onChange={(e) => setNewVendor({ ...newVendor, name: e.target.value })}
-              fullWidth
-            />
-            <TextField
-              label="Email"
-              value={newVendor.email}
-              onChange={(e) => setNewVendor({ ...newVendor, email: e.target.value })}
-              fullWidth
-            />
-            <TextField
-              label="Phone Number"
-              value={newVendor.phone_number}
-              onChange={(e) => setNewVendor({ ...newVendor, phone_number: e.target.value })}
-              fullWidth
-            />
-            <TextField
-              label="Address"
-              value={newVendor.address}
-              onChange={(e) => setNewVendor({ ...newVendor, address: e.target.value })}
-              fullWidth
-              multiline
-              rows={3}
-            />
-          </Box>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Name"
+                value={newVendor.name}
+                onChange={(e) => setNewVendor({ ...newVendor, name: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                fullWidth
+                label="Email"
+                value={newVendor.email}
+                onChange={(e) => setNewVendor({ ...newVendor, email: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                fullWidth
+                label="Phone Number"
+                value={newVendor.phone_number}
+                onChange={(e) => setNewVendor({ ...newVendor, phone_number: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Address"
+                value={newVendor.address}
+                onChange={(e) => setNewVendor({ ...newVendor, address: e.target.value })}
+                multiline
+                rows={3}
+              />
+            </Grid>
+            <Grid item xs={4}>
+              <TextField
+                fullWidth
+                label="State"
+                value={newVendor.state}
+                onChange={(e) => setNewVendor({ ...newVendor, state: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={4}>
+              <TextField
+                fullWidth
+                label="City"
+                value={newVendor.city}
+                onChange={(e) => setNewVendor({ ...newVendor, city: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={4}>
+              <TextField
+                fullWidth
+                label="Pincode"
+                value={newVendor.pincode}
+                onChange={(e) => setNewVendor({ ...newVendor, pincode: e.target.value })}
+              />
+            </Grid>
+          </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog} sx={{ color: '#60A5FA' }}>Cancel</Button>
-          <Button onClick={handleAddVendor} variant="contained" sx={{
-            backgroundColor: '#D9F99D',
-            color: '#000',
-            '&:hover': { backgroundColor: '#BEF264' },
-          }}>Add Vendor</Button>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button onClick={handleAddVendor} sx={buttonStyle}>Add Vendor</Button>
         </DialogActions>
       </Dialog>
     </Box>

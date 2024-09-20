@@ -16,6 +16,7 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import SquareIcon from '@mui/icons-material/Square';
 import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import ReceiptIcon from '@mui/icons-material/Receipt';
 import api from '../../api';
 
 const Dashboard = () => {
@@ -95,6 +96,22 @@ const Dashboard = () => {
           </Card>
         </Grid>
 
+        {/* Total Orders */}
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ borderRadius: 4, boxShadow: 'none', border: '1.5px solid #DBDBDB' }}>
+            <CardContent>
+              <Box display="flex" alignItems="center" mb={1}>
+                <Avatar sx={{ bgcolor: '#ffecb3', width: 32, height: 32, mr: 1 }}>
+                  <ReceiptIcon fontSize="small" sx={{ color: '#ffa000' }} />
+                </Avatar>
+                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 'bold' }}>Total Orders</Typography>
+              </Box>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 0.5 }}>{dashboardData.total_orders}</Typography>
+              <Typography variant="body2" color="text.secondary">All time orders</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
         {/* Top Selling Products */}
         <Grid item xs={12} md={7}>
           <Card sx={{ borderRadius: 4, boxShadow: 'none', border: '1.5px solid #DBDBDB' }}>
@@ -109,7 +126,14 @@ const Dashboard = () => {
                 <Card key={index} sx={{ mb: 2, boxShadow: 'none', border: '1.5px solid #DBDBDB', borderRadius: 2 }}>
                   <CardContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 2 }}>
                     <Box display="flex" alignItems="center">
-                      <Avatar src="/path-to-laptop-image.jpg" variant="square" sx={{ width: 48, height: 48, mr: 2 }} />
+                      <Avatar 
+                        src={product.image} 
+                        variant="square" 
+                        sx={{ width: 48, height: 48, mr: 2,borderRadius:'5px' }}
+                        alt={product.name}
+                      >
+                        {!product.image && product.name.charAt(0)}
+                      </Avatar>
                       <Box>
                         <Typography variant="subtitle2">{product.name}</Typography>
                         <Typography variant="caption" color="text.secondary">Last Month</Typography>

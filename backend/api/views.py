@@ -499,6 +499,9 @@ from .models import SaleOrder, Item, Customer, Vendor, Shipment, SaleOrderItem
 from .serializers import SaleOrderSerializer, ItemSerializer, CustomerSerializer, VendorSerializer, ShipmentSerializer
 
 
+from django.db.models import Sum, F, OuterRef, Subquery
+from .models import SaleOrder, Item, Customer, Vendor, Shipment, SaleOrderItem
+
 class DashboardView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -520,19 +523,37 @@ class DashboardView(APIView):
             created_at__year=current_year
         ).count()
 
+        # Fetch total order count
+        total_orders = SaleOrder.objects.filter(user=user).count()
+
         # Fetch top selling products
-        top_selling_products = SaleOrderItem.objects.filter(sale_order__user=user)\
+        top_selling_items = SaleOrderItem.objects.filter(sale_order__user=user)\
             .values('item_id')\
             .annotate(total_quantity=Sum('quantity'))\
             .order_by('-total_quantity')[:5]
 
-        # Fetch item names for top selling products
-        item_ids = [item['item_id'] for item in top_selling_products]
-        items = Item.objects.filter(item_id__in=item_ids)
-        item_name_map = {item.item_id: item.name for item in items}
+        # Get the corresponding Item objects
+        item_ids = [item['item_id'] for item in top_selling_items]
+        top_items = Item.objects.filter(item_id__in=item_ids)
 
-        for product in top_selling_products:
-            product['name'] = item_name_map.get(product['item_id'], 'Unknown Item')
+        # Create a dictionary to map item_id to total_quantity
+        quantity_map = {item['item_id']: item['total_quantity'] for item in top_selling_items}
+
+        # Process top selling products
+        top_selling_products_list = []
+        for item in top_items:
+            product_data = {
+                'item_id': item.item_id,
+                'name': item.name,
+                'total_quantity': quantity_map[item.item_id],
+                'image': None
+            }
+            if item.image:
+                product_data['image'] = request.build_absolute_uri(item.image.url)
+            top_selling_products_list.append(product_data)
+
+        # Sort the list by total_quantity
+        top_selling_products_list.sort(key=lambda x: x['total_quantity'], reverse=True)
 
         # Fetch stock availability
         total_stock = Item.objects.filter(user=user).aggregate(Sum('quantity'))['quantity__sum'] or 0
@@ -553,7 +574,8 @@ class DashboardView(APIView):
             'total_revenue': total_revenue,
             'pending_shipments': pending_shipments,
             'new_customers': new_customers,
-            'top_selling_products': list(top_selling_products),
+            'total_orders': total_orders,
+            'top_selling_products': top_selling_products_list,
             'total_stock': total_stock,
             'low_stock_items': ItemSerializer(low_stock_items, many=True).data,
             'stock_percentages': {

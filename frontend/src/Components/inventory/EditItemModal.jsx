@@ -38,10 +38,15 @@ function EditItemModal({ open, onClose, item, onSave, categories = [] }) {
   };
 
   const handleCategoryChange = (event, newValue) => {
-    setItemData(prevData => ({
-      ...prevData,
-      category: newValue ? newValue.id : null
-    }));
+    console.log('New category value:', newValue);
+    setItemData(prevData => {
+      const updatedData = {
+        ...prevData,
+        category: newValue ? newValue.id : null
+      };
+      console.log('Updated itemData:', updatedData);
+      return updatedData;
+    });
   };
 
   const handleBrowseClick = () => {
@@ -68,20 +73,39 @@ function EditItemModal({ open, onClose, item, onSave, categories = [] }) {
   const handleSave = async () => {
     try {
       const formData = new FormData();
-      for (const key in itemData) {
+      console.log(itemData)
+      for(const x of categories){
+        console.log(x)
+        if(x.name===itemData.category){
+          
+          itemData.category=x.id
+        }
+      }
+      if(itemData.categories=='-'){
+        itemData.categories="Hoo"
+      }
+      const dataToSend = { ...itemData, item_id: itemData.item_id }; // Ensure item_id is included
+     
+     
+      for (const key in dataToSend) {
         if (key === 'image') {
-          if (itemData[key] instanceof File) {
-            formData.append('image', itemData[key]);
-          } else if (itemData[key] === null) {
+          if (dataToSend[key] instanceof File) {
+            formData.append('image', dataToSend[key]);
+          } else if (dataToSend[key] === null) {
             // If image is explicitly set to null, append an empty string to indicate removal
             formData.append('image', '');
           }
           // If image is undefined (not changed), don't append anything
         } else {
-          formData.append(key, itemData[key]);
+          formData.append(key, dataToSend[key]);
         }
       }
 
+      // Log the FormData contents
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+      }
+      
       const res = await api.put('/token/items/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -150,6 +174,7 @@ function EditItemModal({ open, onClose, item, onSave, categories = [] }) {
                   margin="normal"
                 />
               )}
+              isOptionEqualToValue={(option, value) => option && value && option.id === value.id}
             />
           </Grid>
           <Grid item xs={12} md={6}>
@@ -184,7 +209,7 @@ function EditItemModal({ open, onClose, item, onSave, categories = [] }) {
               fullWidth
               margin="normal"
               label="Restock Quantity"
-              name="restock_quantity"
+              name="reorder_point"
               value={itemData.reorder_point || ''}
               onChange={handleChange}
               type="number"

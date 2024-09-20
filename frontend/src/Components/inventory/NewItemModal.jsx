@@ -32,7 +32,7 @@ function NewItemModal({ open, onClose, onSave, categories }) {
     purchase_price: '',
     selling_price: '',
     quantity: '',
-    restock_quantity: '',
+    reorder_point: '',
     image: null,
   });
   const fileInputRef = useRef(null);
@@ -94,7 +94,7 @@ function NewItemModal({ open, onClose, onSave, categories }) {
       purchase_price: '',
       selling_price: '',
       quantity: '',
-      restock_quantity: '',
+      reorder_point: '',
       image: null,
     });
     onClose();
@@ -189,8 +189,8 @@ function NewItemModal({ open, onClose, onSave, categories }) {
               fullWidth
               margin="normal"
               label="Restock Quantity (Optional)"
-              name="restock_quantity"
-              value={itemData.restock_quantity}
+              name="reorder_point"
+              value={itemData.reorder_point}
               onChange={handleChange}
               type="number"
             />
