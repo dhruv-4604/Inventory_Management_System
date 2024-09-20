@@ -45,7 +45,7 @@ const columnMap = [
   { key: "selling_price", label: "RATE", align: "right" },
 ];
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 6;
 
 function ItemPage() {
   const [items, setItems] = useState([]);
@@ -198,7 +198,7 @@ function ItemPage() {
   };
 
   return (
-    <Box sx={{ p: 3, fontFamily: "ClashGrotesk-Medium", color: "#232619" }}>
+    <Box sx={{ p: 2, fontFamily: "ClashGrotesk-Medium", color: "#232619" }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
         <Box sx={{ display: "flex", gap: 2 }}>
           <Button
@@ -235,7 +235,7 @@ function ItemPage() {
               startIcon={<ClearIcon />}
               sx={greyButtonStyle}
             >
-              Clear
+              Clear Sort
             </Button>
           )}
         </Box>
@@ -282,7 +282,7 @@ function ItemPage() {
                 <TableCell
                   key={column.key}
                   align={column.align}
-                  sx={{ fontWeight: "bold", userSelect: "none" }}
+                  sx={{ fontWeight: "bold", padding: "12px 16px" }}
                 >
                   {column.label}
                 </TableCell>
@@ -290,32 +290,43 @@ function ItemPage() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginatedItems.map((item) => (
-              <TableRow
-                key={item.id}
-                sx={{
-                  "&:last-child td, &:last-child th": { border: 0 },
-                  cursor: "pointer",
-                  "&:hover": { backgroundColor: "#F3F4F6" },
-                }}
-                onClick={() => handleItemClick(item)}
-              >
-                {columnMap.map((column) => (
-                  <TableCell key={column.key} align={column.align} sx={{ userSelect: "none" }}>
-                    {column.key === "image" ? (
-                      <SquareImage 
-                        src={item[column.key] ? `http://127.0.0.1:8000${item[column.key]}` : NoProductListImage} 
-                        alt={item.name} 
-                      />
-                    ) : column.key === "selling_price" ? (
-                      `₹ ${item[column.key]}`
-                    ) : (
-                      item[column.key]
-                    )}
-                  </TableCell>
-                ))}
+            {paginatedItems.length > 0 ? (
+              paginatedItems.map((item) => (
+                <TableRow
+                  key={item.id}
+                  sx={{
+                    "&:last-child td, &:last-child th": { border: 0 },
+                    cursor: "pointer",
+                    "&:hover": { backgroundColor: "#F3F4F6" },
+                  }}
+                  onClick={() => handleItemClick(item)}
+                >
+                  {columnMap.map((column) => (
+                    <TableCell key={column.key} align={column.align} sx={{ padding: "12px 16px" }}>
+                      {column.key === "image" ? (
+                        <SquareImage 
+                          src={item[column.key] ? `http://127.0.0.1:8000${item[column.key]}` : NoProductListImage} 
+                          alt={item.name} 
+                        />
+                      ) : column.key === "selling_price" ? (
+                        `₹ ${item[column.key]}`
+                      ) : (
+                        item[column.key]
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columnMap.length} align="center" sx={{ py: 4 }}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                    
+                    <Typography variant="h6"color={'#5D5D5D'}>No Item Found</Typography>
+                  </Box>
+                </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>
@@ -331,9 +342,11 @@ function ItemPage() {
           sx={{
             '& .MuiPaginationItem-root': {
               color: '#232619',
+              
             },
             '& .Mui-selected': {
               backgroundColor: '#D1EA67 !important',
+              borderRadius:'6px',
             },
           }}
         />
