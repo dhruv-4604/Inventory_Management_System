@@ -1,4 +1,4 @@
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate
 from django.core.files.base import ContentFile
 from django.core.mail import EmailMessage
 from django.conf import settings
@@ -41,6 +41,14 @@ class CompanyDetailsView(APIView):
             return Response({"error": "Company details not found"}, status=status.HTTP_404_NOT_FOUND)
 
     def put(self, request):
+        password = request.data.get('password')
+        if not password:
+            return Response({"error": "Password is required for verification"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = authenticate(username=request.user.username, password=password)
+        if user is None:
+            return Response({"error": "Invalid password"}, status=status.HTTP_401_UNAUTHORIZED)
+
         try:
             company = Company.objects.get(user=request.user)
             serializer = CompanySerializer(company, data=request.data, partial=True)
@@ -100,6 +108,25 @@ class UserDetailsAPIView(generics.GenericAPIView):
         # Combine user and company data
         response_data = {**user_data, **company_data}
         return Response(response_data, status=status.HTTP_200_OK)
+
+    def put(self, request):
+        user = request.user
+        password = request.data.get('password')
+
+        # Authenticate the user
+        if not authenticate(username=user.email, password=password):
+            return Response({"error": "Invalid password"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Update user details
+        serializer = self.get_serializer(user, data={
+            'name': request.data.get('name'),
+            'phone_number': request.data.get('phone_number')
+        }, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
