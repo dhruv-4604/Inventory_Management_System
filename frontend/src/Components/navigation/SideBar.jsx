@@ -9,7 +9,6 @@ import {
 } from '@mui/icons-material';
 import DashboardIcon from '@mui/icons-material/Apps';
 import InventoryIcon from '@mui/icons-material/Inventory';
-import SalesIcon from '@mui/icons-material/AttachMoney';
 import StoreIcon from '@mui/icons-material/Store';
 import SettingsIcon from '@mui/icons-material/Settings';
 import mainLogo from '../../assets/logo.png';
@@ -128,12 +127,18 @@ function Sidebar() {
         { text: 'Price List', to: 'price_list' }
       ]
     },
-    { icon: <SalesIcon />, text: 'Sales', isExpandable: true, to: '/sales', subItems: [
-      { text: 'Sale Orders', to: 'sale_orders' },
-      { text: 'Customers', to: 'customerpage' },
-      { text: 'Shipments', to: 'Shipments' }
-    ]},
-    { icon: <StoreIcon />, text: 'Purchases', isExpandable: true, to: '/Purchases',subItems: [
+    { 
+      icon: <Typography variant="h6" component="span" sx={{ fontWeight: 'bold', fontSize: '1.25rem' }}>₹</Typography>, 
+      text: 'Sales', 
+      isExpandable: true, 
+      to: '/sales', 
+      subItems: [
+        { text: 'Sale Orders', to: 'sale_orders' },
+        { text: 'Customers', to: 'customerpage' },
+        { text: 'Shipments', to: 'Shipments' }
+      ]
+    },
+    { icon: <StoreIcon />, text: 'Purchases', isExpandable: true, to: '/Purchases', subItems: [
       { text: 'Purchase Orders', to: 'Purchase_Orders' },
       { text: 'Vendors', to: 'vendors' }
     ] },
@@ -291,7 +296,7 @@ function Sidebar() {
           paddingRight:'12px',
           border: '1.4px solid #AEAEAE',
         }}>
-          <Avatar src="/path-to-profile-image.jpg" alt="Dhruv Patel" sx={{ width: 40, height: 40, mr: 2 }} />
+          <Avatar src="/path-to-profile-image.jpg" alt="Parth" sx={{ width: 40, height: 40, mr: 2 }} />
           <Box sx={{ flexGrow: 1 }}>
             <Typography pb="-2px" variant="subtitle2" sx={{ fontWeight: 'semibold', fontSize:"17px" }}>{name}</Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary', fontSize:"11px"}}>{email}</Typography>

@@ -330,7 +330,7 @@ class SaleOrderView(APIView):
 
         # Add customer details
         p.setFont("Helvetica-Bold", 12)
-        p.drawString(50, height - 210, "Despatch To")
+        p.drawString(50, height - 210, "Dispatch To")
         
         p.setFont("Helvetica", 10)
         p.drawString(50, height - 225, f"{sale_order.customer_name}")

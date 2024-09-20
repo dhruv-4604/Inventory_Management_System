@@ -1,5 +1,5 @@
 // CategoryCard.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Card,
   CardMedia,
@@ -24,14 +24,14 @@ import {
   TableHead,
   TableRow,
   Paper,
-  IconButton
+  IconButton,
+  TableSortLabel
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
-import api from '../../api';
-import axios from 'axios';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import api from '../../api';
 
 const StyledCard = styled(Card)(({ theme }) => ({
   maxWidth: 280,
@@ -119,9 +119,11 @@ const CategoryCard = ({ category, items, onItemsUpdated, onCategoryDeleted }) =>
   const [openProductsDialog, setOpenProductsDialog] = useState(false);
   const [openAddItemsDialog, setOpenAddItemsDialog] = useState(false);
   const [itemSearchTerm, setItemSearchTerm] = useState('');
+  const [productSearchTerm, setProductSearchTerm] = useState('');
   const [selectedItems, setSelectedItems] = useState([]);
   const [categoryItems, setCategoryItems] = useState([]);
   const [uncategorizedItems, setUncategorizedItems] = useState([]);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
   useEffect(() => {
     updateCategoryItems();
@@ -145,7 +147,7 @@ const CategoryCard = ({ category, items, onItemsUpdated, onCategoryDeleted }) =>
   const handleCloseProductsDialog = () => setOpenProductsDialog(false);
 
   const handleOpenAddItemsDialog = async (event) => {
-    event.stopPropagation(); // Prevent event from bubbling up to the card
+    event.stopPropagation();
     setSelectedItems([]);
     await fetchUncategorizedItems();
     setOpenAddItemsDialog(true);
@@ -175,17 +177,14 @@ const CategoryCard = ({ category, items, onItemsUpdated, onCategoryDeleted }) =>
       for (const item of selectedItems) {
         const formData = new FormData();
         
-        // Append all item properties to formData
         Object.keys(item).forEach(key => {
           if (key !== 'image') {
             formData.append(key, item[key]);
           }
         });
         
-        // Update the category
         formData.append('category', category.id);
 
-        // If there's an image, append it last
         if (item.image instanceof File) {
           formData.append('image', item.image);
         }
@@ -202,7 +201,6 @@ const CategoryCard = ({ category, items, onItemsUpdated, onCategoryDeleted }) =>
       handleCloseAddItemsDialog();
     } catch (error) {
       console.error('Error updating items:', error);
-      // Handle error (e.g., show an error message to the user)
     }
   };
 
@@ -243,24 +241,50 @@ const CategoryCard = ({ category, items, onItemsUpdated, onCategoryDeleted }) =>
       });
       onItemsUpdated([response.data]);
       
-      // Update the local state
       setCategoryItems(prevItems => prevItems.filter(i => i.item_id !== item.item_id));
     } catch (error) {
       console.error('Error removing item from category:', error);
     }
   };
 
-  const availableItems = uncategorizedItems.filter(item => 
-    item.name.toLowerCase().includes(itemSearchTerm.toLowerCase())
-  );
-
-  // Add this function to get the top-selling product
   const getTopSellingProduct = () => {
     if (categoryItems.length === 0) return "No products";
     return categoryItems.reduce((max, item) => 
       (item.sold_quantity > max.sold_quantity) ? item : max
     ).name;
   };
+
+  const sortedAndFilteredCategoryItems = useMemo(() => {
+    let filteredItems = categoryItems.filter(item =>
+      item.name.toLowerCase().includes(productSearchTerm.toLowerCase())
+    );
+
+    if (sortConfig.key !== null) {
+      filteredItems.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return filteredItems;
+  }, [categoryItems, productSearchTerm, sortConfig]);
+
+  const requestSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const availableItems = uncategorizedItems.filter(item => 
+    item.name.toLowerCase().includes(itemSearchTerm.toLowerCase())
+  );
 
   return (
     <>
@@ -304,18 +328,57 @@ const CategoryCard = ({ category, items, onItemsUpdated, onCategoryDeleted }) =>
           </div>
         </DialogTitle>
         <DialogContent>
+          <TextField
+            margin="dense"
+            label="Search Products"
+            type="text"
+            fullWidth
+            value={productSearchTerm}
+            onChange={(e) => setProductSearchTerm(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
           <TableContainer component={Paper}>
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Quantity</TableCell>
-                  <TableCell align="right">Price</TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={sortConfig.key === 'name'}
+                      direction={sortConfig.key === 'name' ? sortConfig.direction : 'asc'}
+                      onClick={() => requestSort('name')}
+                    >
+                      Name
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={sortConfig.key === 'quantity'}
+                      direction={sortConfig.key === 'quantity' ? sortConfig.direction : 'asc'}
+                      onClick={() => requestSort('quantity')}
+                    >
+                      Quantity
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell align="right">
+                    <TableSortLabel
+                      active={sortConfig.key === 'selling_price'}
+                      direction={sortConfig.key === 'selling_price' ? sortConfig.direction : 'asc'}
+                      onClick={() => requestSort('selling_price')}
+                    >
+                      Price
+                    </TableSortLabel>
+                  </TableCell>
                   <TableCell align="right">Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {categoryItems.map((item) => (
+                {sortedAndFilteredCategoryItems.map((item) => (
                   <TableRow key={item.item_id}>
                     <TableCell>{item.name}</TableCell>
                     <TableCell>{item.quantity}</TableCell>

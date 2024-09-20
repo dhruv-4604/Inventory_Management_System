@@ -3,15 +3,18 @@ import {
   Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Button, TextField, InputAdornment, Modal, Typography,
   Grid, Select, MenuItem, FormControl, InputLabel, FormHelperText,
-  TablePagination
+  Pagination, Menu
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import SortIcon from '@mui/icons-material/Sort';
 import AddIcon from '@mui/icons-material/Add';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import ClearIcon from '@mui/icons-material/Clear';
 import axios from 'axios';
 import api from '../../api';
 
-
+const ITEMS_PER_PAGE = 10;
 
 const CustomerPage = () => {
   const [customers, setCustomers] = useState([]);
@@ -29,10 +32,9 @@ const CustomerPage = () => {
   const [errors, setErrors] = useState({});
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [sortField, setSortField] = useState('name');
-  const [sortOrder, setSortOrder] = useState('asc');
+  const [page, setPage] = useState(1);
+  const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
+  const [sortAnchorEl, setSortAnchorEl] = useState(null);
 
   useEffect(() => {
     fetchCustomers();
@@ -43,7 +45,7 @@ const CustomerPage = () => {
     try {
       const response = await api.get('/customers/');  
       setCustomers(response.data);
-      console.log('Fetched customers:', response.data); // Add this line for debugging
+      console.log('Fetched customers:', response.data);
     } catch (error) {
       console.error('Error fetching customers:', error);
     }
@@ -79,6 +81,25 @@ const CustomerPage = () => {
     fontWeight: 'semibold',
     padding: '6px 16px',
     height: '36px',
+  };
+
+  const greyButtonStyle = {
+    border: '2px solid #DEDEDE',
+    color: '#AEAEAE',
+    boxShadow: 'none',
+    backgroundColor: '#FFFFFF',
+    '&:hover': {
+      border: '2px solid #616161',
+      color: '#616161',
+      backgroundColor: '#FFFFFF',
+      boxShadow: 'none',
+    },
+    textTransform: 'none',
+    fontWeight: 'semibold',
+    padding: '4px 12px',
+    height: '36px',
+    minWidth: '100px',
+    fontSize: '0.875rem',
   };
 
   const handleOpenModal = () => setIsModalOpen(true);
@@ -151,7 +172,6 @@ const CustomerPage = () => {
       }
     } else {
       console.log('Form validation failed');
-      // ... existing code for form validation failure ...
     }
   };
 
@@ -159,34 +179,101 @@ const CustomerPage = () => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+  const handleSortClick = (event) => {
+    setSortAnchorEl(event.currentTarget);
   };
 
-  const handleSort = (field) => {
-    const isAsc = sortField === field && sortOrder === 'asc';
-    setSortOrder(isAsc ? 'desc' : 'asc');
-    setSortField(field);
+  const handleSortClose = () => {
+    setSortAnchorEl(null);
+  };
+
+  const handleSort = (key) => {
+    const isAsc = sortConfig.key === key && sortConfig.direction === 'asc';
+    setSortConfig({ key, direction: isAsc ? 'desc' : 'asc' });
+    handleSortClose();
+  };
+
+  const handleSortDirectionToggle = () => {
+    setSortConfig(prevConfig => ({
+      ...prevConfig,
+      direction: prevConfig.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const handleClearSort = () => {
+    setSortConfig({ key: null, direction: 'asc' });
   };
 
   const sortedAndFilteredCustomers = useMemo(() => {
     return customers
-      .sort((a, b) => {
-        if (a[sortField] < b[sortField]) return sortOrder === 'asc' ? -1 : 1;
-        if (a[sortField] > b[sortField]) return sortOrder === 'asc' ? 1 : -1;
-        return 0;
-      })
       .filter(customer =>
         customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         customer.phone_number.includes(searchTerm)
-      );
-  }, [customers, sortField, sortOrder, searchTerm]);
+      )
+      .sort((a, b) => {
+        if (!sortConfig.key) return 0;
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+  }, [customers, searchTerm, sortConfig]);
+
+  const paginatedCustomers = sortedAndFilteredCustomers.slice(
+    (page - 1) * ITEMS_PER_PAGE,
+    page * ITEMS_PER_PAGE
+  );
+
+  const pageCount = Math.ceil(sortedAndFilteredCustomers.length / ITEMS_PER_PAGE);
 
   return (
     <Box sx={{ width: '100%', p: 2 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="contained"
+            startIcon={<SortIcon />}
+            onClick={handleSortClick}
+            sx={buttonStyle}
+          >
+            Sort
+          </Button>
+          <Menu
+            anchorEl={sortAnchorEl}
+            open={Boolean(sortAnchorEl)}
+            onClose={handleSortClose}
+          >
+            <MenuItem onClick={() => handleSort('name')}>Name</MenuItem>
+            <MenuItem onClick={() => handleSort('email')}>Email</MenuItem>
+            <MenuItem onClick={() => handleSort('phone_number')}>Phone Number</MenuItem>
+            <MenuItem onClick={() => handleSort('state')}>State</MenuItem>
+            <MenuItem onClick={() => handleSort('city')}>City</MenuItem>
+          </Menu>
+          {sortConfig.key && (
+            <Button
+              variant="contained"
+              onClick={handleSortDirectionToggle}
+              startIcon={sortConfig.direction === 'asc' ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />}
+              sx={greyButtonStyle}
+            >
+              {`${sortConfig.key} (${sortConfig.direction === 'asc' ? 'Ascending' : 'Descending'})`}
+            </Button>
+          )}
+          {sortConfig.key && (
+            <Button
+              variant="contained"
+              onClick={handleClearSort}
+              startIcon={<ClearIcon />}
+              sx={greyButtonStyle}
+            >
+              Clear Sort
+            </Button>
+          )}
+        </Box>
         <TextField 
           variant="outlined"
           placeholder="Search customer"
@@ -200,89 +287,78 @@ const CustomerPage = () => {
             ),
           }}
           sx={{
-            width: '40%',
+            width: '300px',
             '& .MuiOutlinedInput-root': {
-              borderRadius: '8px',
+              borderRadius: '6px',
               backgroundColor: '#F3F4F6',
-              height: '40px',
+              height: '36px',
+            },
+            '& .MuiOutlinedInput-input': {
+              padding: '8px 14px',
             },
           }}
         />
-        <Box>
-          <Button
-            variant="contained"
-            startIcon={<SortIcon />}
-            sx={{ ...buttonStyle, mr: 2 }}
-          >
-            Sort
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            sx={buttonStyle}
-            onClick={handleOpenModal}
-          >
-            Add Customer
-          </Button>
-        </Box>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          sx={buttonStyle}
+          onClick={handleOpenModal}
+        >
+          Add Customer
+        </Button>
       </Box>
       <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #E5E7EB' }}>
         <Table sx={{ minWidth: 650 }} aria-label="customer table">
           <TableHead>
             <TableRow sx={{ backgroundColor: '#F9FAFB' }}>
-              <TableCell sx={{ fontWeight: 'bold' }} onClick={() => handleSort('name')}>
-                NAME {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
-              </TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }} onClick={() => handleSort('email')}>
-                EMAIL {sortField === 'email' && (sortOrder === 'asc' ? '↑' : '↓')}
-              </TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }} onClick={() => handleSort('phone_number')}>
-                PHONE NUMBER {sortField === 'phone_number' && (sortOrder === 'asc' ? '↑' : '↓')}
-              </TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }} onClick={() => handleSort('address')}>
-                ADDRESS {sortField === 'address' && (sortOrder === 'asc' ? '↑' : '↓')}
-              </TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }} onClick={() => handleSort('state')}>
-                STATE {sortField === 'state' && (sortOrder === 'asc' ? '↑' : '↓')}
-              </TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }} onClick={() => handleSort('city')}>
-                CITY {sortField === 'city' && (sortOrder === 'asc' ? '↑' : '↓')}
-              </TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }} onClick={() => handleSort('pincode')}>
-                PINCODE {sortField === 'pincode' && (sortOrder === 'asc' ? '↑' : '↓')}
-              </TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>NAME</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>EMAIL</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>PHONE NUMBER</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>ADDRESS</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>STATE</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>CITY</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>PINCODE</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {sortedAndFilteredCustomers
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((customer) => (
-                <TableRow
-                  key={customer.customer_id}
-                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                >
-                  <TableCell>{customer.name}</TableCell>
-                  <TableCell>{customer.email}</TableCell>
-                  <TableCell>{customer.phone_number}</TableCell>
-                  <TableCell>{customer.address}</TableCell>
-                  <TableCell>{customer.state}</TableCell>
-                  <TableCell>{customer.city}</TableCell>
-                  <TableCell>{customer.pincode}</TableCell>
-                </TableRow>
-              ))}
+            {paginatedCustomers.map((customer) => (
+              <TableRow
+                key={customer.customer_id}
+                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+              >
+                <TableCell>{customer.name}</TableCell>
+                <TableCell>{customer.email}</TableCell>
+                <TableCell>{customer.phone_number}</TableCell>
+                <TableCell>{customer.address}</TableCell>
+                <TableCell>{customer.state}</TableCell>
+                <TableCell>{customer.city}</TableCell>
+                <TableCell>{customer.pincode}</TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </TableContainer>
 
-      <TablePagination
-        rowsPerPageOptions={[5, 10, 25]}
-        component="div"
-        count={sortedAndFilteredCustomers.length}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-      />
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+        <Typography variant="body2">
+          Page {page} of {pageCount}
+        </Typography>
+        <Pagination 
+          count={pageCount} 
+          page={page} 
+          onChange={handleChangePage}
+          color="primary"
+          sx={{
+            '& .MuiPaginationItem-root': {
+              color: '#232619',
+            },
+            '& .Mui-selected': {
+              backgroundColor: '#D1EA67 !important',
+              borderRadius: '6px',
+            },
+          }}
+        />
+      </Box>
 
       <Modal
         open={isModalOpen}

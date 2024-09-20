@@ -93,13 +93,19 @@ const CustomerForm = ({ customers, order, onOrderChange }) => {
         </Select>
       </FormControl>
       {order.orderMode === 'DELIVERY' && (
-        <TextField
-          fullWidth
-          label="Courier Partner"
-          value={order.courierPartner}
-          onChange={(e) => onOrderChange('courierPartner', e.target.value)}
-          margin="normal"
-        />
+        <FormControl fullWidth margin="normal">
+          <InputLabel>Courier Partner</InputLabel>
+          <Select
+            value={order.courierPartner}
+            onChange={(e) => onOrderChange('courierPartner', e.target.value)}
+          >
+            <MenuItem value="FEDEX">FedEx</MenuItem>
+            <MenuItem value="UPS">UPS</MenuItem>
+            <MenuItem value="USPS">USPS</MenuItem>
+            <MenuItem value="DHL">DHL</MenuItem>
+            <MenuItem value="OTHER">Other</MenuItem>
+          </Select>
+        </FormControl>
       )}
     </Box>
   );
@@ -172,7 +178,7 @@ const OrderItemsTable = ({ orderItems, availableItems, onItemChange, onAddItem, 
               </TableCell>
               <TableCell>
                 {item.item && item.quantity
-                  ? `₹ ${(item.item.selling_price * item.quantity)}`
+                  ? `₹ ${(item.item.selling_price * item.quantity).toFixed(2)}`
                   : '-'}
               </TableCell>
               <TableCell>
@@ -188,17 +194,35 @@ const OrderItemsTable = ({ orderItems, availableItems, onItemChange, onAddItem, 
 };
 
 const OrderSummary = ({ order, onOrderChange, total }) => {
+  const handleDiscountChange = (e) => {
+    const newValue = e.target.value;
+    if (newValue === '' || (parseFloat(newValue) >= 0 && parseFloat(newValue) <= total)) {
+      onOrderChange('discount', newValue === '' ? '' : parseFloat(newValue));
+    }
+  };
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', mt: 2 }}>
       <TextField
         label="Discount"
         type="number"
         value={order.discount}
-        onChange={(e) => onOrderChange('discount', parseFloat(e.target.value))}
-        InputProps={{ inputProps: { min: 0 } }}
+        onChange={handleDiscountChange}
+        onBlur={() => {
+          if (order.discount === '') {
+            onOrderChange('discount', 0);
+          }
+        }}
+        InputProps={{ 
+          inputProps: { 
+            min: 0,
+            max: total,
+            step: 0.01
+          } 
+        }}
         sx={{ width: '200px', mb: 1 }}
       />
-      <Typography variant="h6">Total: ₹ {total}</Typography>
+      <Typography variant="h6">Total: ₹ {(total - (parseFloat(order.discount) || 0)).toFixed(2)}</Typography>
       <FormControl sx={{ width: '200px', mt: 1 }}>
         <InputLabel>Payment Status</InputLabel>
         <Select
@@ -309,7 +333,7 @@ const NewSaleOrderPage = () => {
 
   const calculateTotal = () => {
     const subtotal = orderItems.reduce((sum, item) => sum + (item.amount || 0), 0);
-    return subtotal - order.discount;
+    return Math.max(subtotal - (parseFloat(order.discount) || 0), 0);
   };
 
   const isOrderValid = () => {
@@ -388,7 +412,7 @@ const NewSaleOrderPage = () => {
         quantity,
         rate: item.selling_price
       })),
-      discount: order.discount || 0,
+      discount: parseFloat(order.discount) || 0,
       total_amount: calculateTotal()
     };
 
