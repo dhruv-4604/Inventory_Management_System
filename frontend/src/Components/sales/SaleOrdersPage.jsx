@@ -33,7 +33,7 @@ const SaleOrdersPage = () => {
     setIsLoading(true);
     try {
       const response = await api.get('/token/saleorders/');
-      setSalesOrders(response.data);
+      setSalesOrders(response.data.reverse());
       setFilteredOrders(response.data);
     } catch (error) {
       console.error('Error fetching sale orders:', error);

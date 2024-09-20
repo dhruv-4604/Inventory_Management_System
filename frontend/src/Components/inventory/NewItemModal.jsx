@@ -20,9 +20,25 @@ import {
   Select,
   MenuItem,
   Autocomplete,
+  Alert,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import api from '../../api';
+import { styled } from '@mui/material/styles';
+
+// Custom styled button with green gradient
+const GreenGradientButton = styled(Button)(({ theme }) => ({
+  background: 'linear-gradient(90deg, #D1EA67 , #A6F15A )',
+  color: '#232619',
+  boxShadow: 'none',
+  '&:hover': {
+    background: 'linear-gradient(90deg, #C1DA57 , #96E14A )',
+    boxShadow: 'none',
+  },
+  textTransform: 'none',
+  fontWeight: 'semibold',
+}));
+
 function NewItemModal({ open, onClose, onSave, categories }) {
   const [itemData, setItemData] = useState({
     name: '',
@@ -35,6 +51,7 @@ function NewItemModal({ open, onClose, onSave, categories }) {
     reorder_point: '',
     image: null,
   });
+  const [errors, setErrors] = useState({});
   const fileInputRef = useRef(null);
 
   const handleChange = (event) => {
@@ -65,6 +82,20 @@ function NewItemModal({ open, onClose, onSave, categories }) {
   };
 
   const handleSave = async() => {
+    const newErrors = {};
+    const requiredFields = ['name', 'brand', 'description', 'purchase_price', 'selling_price', 'quantity'];
+    
+    requiredFields.forEach(field => {
+      if (!itemData[field]) {
+        newErrors[field] = 'This field is required';
+      }
+    });
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
     try {
       const formData = new FormData();
       for (const key in itemData) {
@@ -83,32 +114,28 @@ function NewItemModal({ open, onClose, onSave, categories }) {
       });
       
       onSave(res.data);
+      setItemData({
+        name: '',
+        brand: '',
+        description: '',
+        category: null,
+        purchase_price: '',
+        selling_price: '',
+        quantity: '',
+        reorder_point: '',
+        image: null,
+      });
+      onClose();
     } catch (error) {
       alert(error)
     }
-    setItemData({
-      name: '',
-      brand: '',
-      description: '',
-      category: null,
-      purchase_price: '',
-      selling_price: '',
-      quantity: '',
-      reorder_point: '',
-      image: null,
-    });
-    onClose();
   };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>
+      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         New Item
-        <IconButton
-          aria-label="close"
-          onClick={onClose}
-          sx={{ position: 'absolute', right: 8, top: 8 }}
-        >
+        <IconButton onClick={onClose} size="small">
           <CloseIcon />
         </IconButton>
       </DialogTitle>
@@ -123,6 +150,8 @@ function NewItemModal({ open, onClose, onSave, categories }) {
               value={itemData.name}
               onChange={handleChange}
               required
+              error={!!errors.name}
+              helperText={errors.name}
             />
             <TextField
               fullWidth
@@ -131,6 +160,9 @@ function NewItemModal({ open, onClose, onSave, categories }) {
               name="brand"
               value={itemData.brand}
               onChange={handleChange}
+              required
+              error={!!errors.brand}
+              helperText={errors.brand}
             />
             <TextField
               fullWidth
@@ -141,6 +173,9 @@ function NewItemModal({ open, onClose, onSave, categories }) {
               onChange={handleChange}
               multiline
               rows={2}
+              required
+              error={!!errors.description}
+              helperText={errors.description}
             />
             <Autocomplete
               fullWidth
@@ -166,6 +201,9 @@ function NewItemModal({ open, onClose, onSave, categories }) {
               value={itemData.purchase_price}
               onChange={handleChange}
               type="number"
+              required
+              error={!!errors.purchase_price}
+              helperText={errors.purchase_price}
             />
             <TextField
               fullWidth
@@ -175,6 +213,9 @@ function NewItemModal({ open, onClose, onSave, categories }) {
               value={itemData.selling_price}
               onChange={handleChange}
               type="number"
+              required
+              error={!!errors.selling_price}
+              helperText={errors.selling_price}
             />
             <TextField
               fullWidth
@@ -184,6 +225,9 @@ function NewItemModal({ open, onClose, onSave, categories }) {
               value={itemData.quantity}
               onChange={handleChange}
               type="number"
+              required
+              error={!!errors.quantity}
+              helperText={errors.quantity}
             />
             <TextField
               fullWidth
@@ -199,6 +243,7 @@ function NewItemModal({ open, onClose, onSave, categories }) {
             <Box
               sx={{
                 border: '1px dashed grey',
+                borderRadius: '4px',
                 height: 200,
                 display: 'flex',
                 justifyContent: 'center',
@@ -209,11 +254,26 @@ function NewItemModal({ open, onClose, onSave, categories }) {
               }}
               onClick={handleBrowseClick}
             >
-              <Typography>Drag image here</Typography>
-              <Typography>or</Typography>
-              <Typography color="primary" sx={{ cursor: 'pointer' }}>
-                Browse image
-              </Typography>
+              {itemData.image ? (
+                <>
+                  <Typography>Selected file: {itemData.image.name}</Typography>
+                  {itemData.image.type.startsWith('image/') && (
+                    <img
+                      src={URL.createObjectURL(itemData.image)}
+                      alt="Preview"
+                      style={{ maxWidth: '100%', maxHeight: '150px', marginTop: '10px' }}
+                    />
+                  )}
+                </>
+              ) : (
+                <>
+                  <Typography>Drag image here</Typography>
+                  <Typography>or</Typography>
+                  <Typography color="primary" sx={{ cursor: 'pointer' }}>
+                    Browse image
+                  </Typography>
+                </>
+              )}
               <input
                 type="file"
                 ref={fileInputRef}
@@ -226,8 +286,8 @@ function NewItemModal({ open, onClose, onSave, categories }) {
         </Grid>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSave} variant="contained" color="primary">Save</Button>
+        <Button onClick={onClose} sx={{ color: '#232619' }}>Cancel</Button>
+        <GreenGradientButton onClick={handleSave}>Save</GreenGradientButton>
       </DialogActions>
     </Dialog>
   );

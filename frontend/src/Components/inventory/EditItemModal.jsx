@@ -33,7 +33,7 @@ function EditItemModal({ open, onClose, item, onSave, categories = [] }) {
     const { name, value } = event.target;
     setItemData(prevData => ({
       ...prevData,
-      [name]: value
+      [name]: value === '' ? null : value // Set to null if empty string
     }));
   };
 
@@ -71,6 +71,15 @@ function EditItemModal({ open, onClose, item, onSave, categories = [] }) {
   };
 
   const handleSave = async () => {
+    // Validate required fields
+    const requiredFields = ['name', 'brand', 'description', 'purchase_price', 'selling_price', 'quantity'];
+    const missingFields = requiredFields.filter(field => !itemData[field]);
+
+    if (missingFields.length > 0) {
+      alert(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      return;
+    }
+
     try {
       const formData = new FormData();
       console.log(itemData)
@@ -97,7 +106,7 @@ function EditItemModal({ open, onClose, item, onSave, categories = [] }) {
           }
           // If image is undefined (not changed), don't append anything
         } else {
-          formData.append(key, dataToSend[key]);
+          formData.append(key, dataToSend[key] === null ? '' : dataToSend[key]);
         }
       }
 
@@ -115,7 +124,7 @@ function EditItemModal({ open, onClose, item, onSave, categories = [] }) {
       onClose();
     } catch (error) {
       console.error('Error updating item:', error);
-      // Handle error (e.g., show an error message to the user)
+      alert('Error updating item. Please try again.');
     }
   };
 
@@ -150,6 +159,7 @@ function EditItemModal({ open, onClose, item, onSave, categories = [] }) {
               name="brand"
               value={itemData.brand || ''}
               onChange={handleChange}
+              required
             />
             <TextField
               fullWidth
@@ -160,6 +170,7 @@ function EditItemModal({ open, onClose, item, onSave, categories = [] }) {
               onChange={handleChange}
               multiline
               rows={2}
+              required
             />
             <Autocomplete
               fullWidth
@@ -186,6 +197,7 @@ function EditItemModal({ open, onClose, item, onSave, categories = [] }) {
               value={itemData.purchase_price || ''}
               onChange={handleChange}
               type="number"
+              required
             />
             <TextField
               fullWidth
@@ -195,6 +207,7 @@ function EditItemModal({ open, onClose, item, onSave, categories = [] }) {
               value={itemData.selling_price || ''}
               onChange={handleChange}
               type="number"
+              required
             />
             <TextField
               fullWidth
@@ -204,6 +217,7 @@ function EditItemModal({ open, onClose, item, onSave, categories = [] }) {
               value={itemData.quantity || ''}
               onChange={handleChange}
               type="number"
+              required
             />
             <TextField
               fullWidth
@@ -247,7 +261,23 @@ function EditItemModal({ open, onClose, item, onSave, categories = [] }) {
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSave} variant="contained" color="primary">Save</Button>
+        <Button 
+          onClick={handleSave} 
+          variant="contained" 
+          sx={{ 
+            background: 'linear-gradient(90deg, #D1EA67 , #A6F15A )',
+            color: '#232619',
+            boxShadow: 'none',
+            '&:hover': {
+              background: 'linear-gradient(90deg, #C1DA57 , #96E14A )',
+              boxShadow: 'none'
+            },
+            textTransform: 'none',
+            fontWeight: 'semibold',
+          }}
+        >
+          Save
+        </Button>
       </DialogActions>
     </Dialog>
   );

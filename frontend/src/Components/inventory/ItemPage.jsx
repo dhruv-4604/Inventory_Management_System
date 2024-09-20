@@ -10,16 +10,24 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Checkbox,
   InputAdornment,
+  Menu,
+  MenuItem,
+  Pagination,
+  Typography,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import AddIcon from "@mui/icons-material/Add";
 import SortIcon from "@mui/icons-material/Sort";
 import SearchIcon from "@mui/icons-material/Search";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import ClearIcon from "@mui/icons-material/Clear";
 import ItemDetailView from "./ItemDetailView";
 import NewItemModal from "./NewItemModal";
 import api from "../../api";
+import NoProductListImage from '../../assets/Noproduct_itemlist.png';
+import { BorderColor } from "@mui/icons-material";
 
 const SquareImage = styled('img')({
   width: '50px',
@@ -37,6 +45,8 @@ const columnMap = [
   { key: "selling_price", label: "RATE", align: "right" },
 ];
 
+const ITEMS_PER_PAGE = 10;
+
 function ItemPage() {
   const [items, setItems] = useState([]);
   const [categories, setCategories] = useState({});
@@ -44,6 +54,10 @@ function ItemPage() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [newItemModalOpen, setNewItemModalOpen] = useState(false);
   const [categoriesList, setCategoriesList] = useState([]);
+  const [sortAnchorEl, setSortAnchorEl] = useState(null);
+  const [sortField, setSortField] = useState(null);
+  const [sortOrder, setSortOrder] = useState(null);
+  const [page, setPage] = useState(1);
 
   async function fetchData() {
     try {
@@ -77,13 +91,87 @@ function ItemPage() {
     setSearchTerm(event.target.value);
   };
 
-  const filteredItems = useMemo(() => {
-    return items.filter((item) =>
-      Object.values(item).some((value) =>
-        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-      )
+  const handleSortClick = (event) => {
+    setSortAnchorEl(event.currentTarget);
+  };
+
+  const handleSortClose = () => {
+    setSortAnchorEl(null);
+  };
+
+  const handleSortFieldSelect = (field) => {
+    setSortField(field);
+    setSortOrder('asc');
+    handleSortClose();
+  };
+
+  const handleSortOrderToggle = () => {
+    setSortOrder(prevOrder => prevOrder === 'asc' ? 'desc' : 'asc');
+  };
+
+  const handleClearSort = () => {
+    setSortField(null);
+    setSortOrder(null);
+  };
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const sortedAndFilteredItems = useMemo(() => {
+    let result = items.filter((item) =>
+      Object.entries(item).some(([key, value]) => {
+        if (typeof value === 'string' || typeof value === 'number') {
+          return value.toString().toLowerCase().includes(searchTerm.toLowerCase());
+        }
+        return false;
+      })
     );
-  }, [items, searchTerm]);
+
+    if (sortField && sortOrder) {
+      result.sort((a, b) => {
+        if (a[sortField] < b[sortField]) return sortOrder === 'asc' ? -1 : 1;
+        if (a[sortField] > b[sortField]) return sortOrder === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return result;
+  }, [items, searchTerm, sortField, sortOrder]);
+
+  const paginatedItems = sortedAndFilteredItems.slice(
+    (page - 1) * ITEMS_PER_PAGE,
+    page * ITEMS_PER_PAGE
+  );
+
+  const pageCount = Math.ceil(sortedAndFilteredItems.length / ITEMS_PER_PAGE);
+
+  const buttonStyle = {
+    background: 'linear-gradient(90deg, #D1EA67 , #A6F15A )',
+    color: '#232619',
+    boxShadow: 'none',
+    '&:hover': {
+      background: 'linear-gradient(90deg, #C1DA57 , #96E14A )',
+      boxShadow: 'none'
+    },
+    textTransform: 'none',
+    fontWeight: 'semibold',
+  };
+
+  const greyButtonStyle = {
+    border:'2px solid #DEDEDE',
+    color: '#AEAEAE',
+    boxShadow: 'none',
+    backgroundColor:'#FFFFFF',
+    '&:hover': {
+      border:'2px solid #616161',
+    color: '#616161',
+    backgroundColor:'#FFFFFF',
+    boxShadow:'none',
+    },
+    textTransform: 'none',
+    fontWeight: 'semibold',
+  };
 
   const handleItemClick = (item) => {
     setSelectedItem(item);
@@ -110,25 +198,47 @@ function ItemPage() {
   };
 
   return (
-    <Box sx={{ p: 3, fontFamily: "ClashGrotesk-Medium" }}>
+    <Box sx={{ p: 3, fontFamily: "ClashGrotesk-Medium", color: "#232619" }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-        <Button
-          variant="contained"
-          startIcon={<SortIcon />}
-          sx={{ 
-            background: 'linear-gradient(90deg, #D1EA67 , #A6F15A )',
-            color: '#232619',
-            boxShadow:'none',
-            '&:hover': {
-              background: 'linear-gradient(90deg, #C1DA57 , #96E14A )',
-              boxShadow:'none'
-            },
-            textTransform: 'none',
-            fontWeight: 'semibold',
-          }}
-        >
-          Sort
-        </Button>
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <Button
+            variant="contained"
+            startIcon={<SortIcon />}
+            onClick={handleSortClick}
+            sx={buttonStyle}
+          >
+            Sort
+          </Button>
+          <Menu
+            anchorEl={sortAnchorEl}
+            open={Boolean(sortAnchorEl)}
+            onClose={handleSortClose}
+          >
+            <MenuItem onClick={() => handleSortFieldSelect('name')}>Name</MenuItem>
+            <MenuItem onClick={() => handleSortFieldSelect('quantity')}>Quantity</MenuItem>
+            <MenuItem onClick={() => handleSortFieldSelect('selling_price')}>Rate</MenuItem>
+          </Menu>
+          {sortField && (
+            <Button
+              variant="contained"
+              onClick={handleSortOrderToggle}
+              startIcon={sortOrder === 'asc' ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />}
+              sx={greyButtonStyle}
+            >
+              {`${sortField} (${sortOrder === 'asc' ? 'Ascending' : 'Descending'})`}
+            </Button>
+          )}
+          {(sortField || sortOrder) && (
+            <Button
+              variant="contained"
+              onClick={handleClearSort}
+              startIcon={<ClearIcon />}
+              sx={greyButtonStyle}
+            >
+              Clear
+            </Button>
+          )}
+        </Box>
         <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
           <TextField
             placeholder="Search item"
@@ -155,18 +265,7 @@ function ItemPage() {
             onClick={handleNewItemClick}
             variant="contained"
             startIcon={<AddIcon />}
-            sx={{ 
-              height:'100%',
-              background: 'linear-gradient(90deg, #D1EA67 , #A6F15A )',
-              color: '#232619',
-              boxShadow:'none',
-              '&:hover': {
-                background: 'linear-gradient(90deg, #C1DA57 , #96E14A )',
-                boxShadow:'none'
-              },
-              textTransform: 'none',
-              fontWeight: 'semibold',
-            }}
+            sx={buttonStyle}
           >
             New Item
           </Button>
@@ -191,7 +290,7 @@ function ItemPage() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredItems.map((item) => (
+            {paginatedItems.map((item) => (
               <TableRow
                 key={item.id}
                 sx={{
@@ -204,7 +303,10 @@ function ItemPage() {
                 {columnMap.map((column) => (
                   <TableCell key={column.key} align={column.align} sx={{ userSelect: "none" }}>
                     {column.key === "image" ? (
-                      <SquareImage src={"http://127.0.0.1:8000"+item[column.key]} alt={item.name} />
+                      <SquareImage 
+                        src={item[column.key] ? `http://127.0.0.1:8000${item[column.key]}` : NoProductListImage} 
+                        alt={item.name} 
+                      />
                     ) : column.key === "selling_price" ? (
                       `₹ ${item[column.key]}`
                     ) : (
@@ -217,6 +319,25 @@ function ItemPage() {
           </TableBody>
         </Table>
       </TableContainer>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+        <Typography variant="body2">
+          Page {page} of {pageCount}
+        </Typography>
+        <Pagination 
+          count={pageCount} 
+          page={page} 
+          onChange={handleChangePage}
+          color="primary"
+          sx={{
+            '& .MuiPaginationItem-root': {
+              color: '#232619',
+            },
+            '& .Mui-selected': {
+              backgroundColor: '#D1EA67 !important',
+            },
+          }}
+        />
+      </Box>
       <ItemDetailView
         open={!!selectedItem}
         onClose={() => { setSelectedItem(null); fetchData(); }}

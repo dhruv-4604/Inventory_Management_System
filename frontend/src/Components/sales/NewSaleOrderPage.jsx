@@ -91,13 +91,19 @@ const CustomerForm = ({ customers, order, onOrderChange }) => {
         </Select>
       </FormControl>
       {order.orderMode === 'DELIVERY' && (
-        <TextField
-          fullWidth
-          label="Courier Partner"
-          value={order.courierPartner}
-          onChange={(e) => onOrderChange('courierPartner', e.target.value)}
-          margin="normal"
-        />
+        <FormControl fullWidth margin="normal">
+          <InputLabel>Courier Partner</InputLabel>
+          <Select
+            value={order.courierPartner}
+            onChange={(e) => onOrderChange('courierPartner', e.target.value)}
+          >
+            <MenuItem value="FEDEX">FedEx</MenuItem>
+            <MenuItem value="UPS">UPS</MenuItem>
+            <MenuItem value="USPS">USPS</MenuItem>
+            <MenuItem value="DHL">DHL</MenuItem>
+            <MenuItem value="OTHER">Other</MenuItem>
+          </Select>
+        </FormControl>
       )}
     </Box>
   );
@@ -226,7 +232,7 @@ const NewSaleOrderPage = () => {
     state: '',
     city: '',
     pincode: '',
-    courierPartner: '',
+    courierPartner: 'OTHER',
     paymentStatus: 'Due',
     discount: 0
   });
