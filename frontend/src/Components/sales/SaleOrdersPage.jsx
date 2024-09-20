@@ -171,9 +171,9 @@ const SaleOrdersPage = () => {
                     sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                   >
                     <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
-                    <TableCell>{order.sale_order_id}</TableCell>
+                    <TableCell>INV000{order.sale_order_id}</TableCell>
                     <TableCell>{order.customer_name}</TableCell>
-                    <TableCell>{`$${order.total_amount}`}</TableCell>
+                    <TableCell>{`₹ ${order.total_amount}`}</TableCell>
                     <TableCell>
                       {!order.payment_received ? (
                         <Button

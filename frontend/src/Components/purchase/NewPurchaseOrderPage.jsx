@@ -84,11 +84,11 @@ const OrderItemsTable = ({ orderItems, availableItems, onItemChange, onAddItem, 
                 />
               </TableCell>
               <TableCell>
-                {item.rate ? `$${item.rate}` : '-'}
+                {item.rate ? `₹ ${item.rate}` : '-'}
               </TableCell>
               <TableCell>
                 {item.quantity && item.rate
-                  ? `$${(item.quantity * item.rate).toFixed(2)}`
+                  ? `₹ ${(item.quantity * item.rate).toFixed(2)}`
                   : '-'}
               </TableCell>
               <TableCell>
@@ -106,7 +106,7 @@ const OrderItemsTable = ({ orderItems, availableItems, onItemChange, onAddItem, 
 const OrderSummary = ({ order, onOrderChange, total }) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', mt: 2 }}>
-      <Typography variant="h6">Total: ${total.toFixed(2)}</Typography>
+      <Typography variant="h6">Total: ₹ {total.toFixed(2)}</Typography>
       <FormControl sx={{ width: '200px', mt: 1 }}>
         <InputLabel>Payment Status</InputLabel>
         <Select

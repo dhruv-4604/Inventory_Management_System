@@ -311,7 +311,7 @@ const CategoryCard = ({ category, items, onItemsUpdated, onCategoryDeleted }) =>
                   <TableRow key={item.item_id}>
                     <TableCell>{item.name}</TableCell>
                     <TableCell>{item.quantity}</TableCell>
-                    <TableCell align="right">${item.selling_price}</TableCell>
+                    <TableCell align="right">₹ {item.selling_price}</TableCell>
                     <TableCell align="right">
                       <IconButton onClick={() => handleDeleteItem(item)} size="small">
                         <DeleteOutlineIcon />
@@ -358,7 +358,7 @@ const CategoryCard = ({ category, items, onItemsUpdated, onCategoryDeleted }) =>
                 />
                 <ListItemText 
                   primary={item.name} 
-                  secondary={`Quantity: ${item.quantity}, Price: $${item.selling_price}`}
+                  secondary={`Quantity: ${item.quantity}, Price: ₹ ${item.selling_price}`}
                 />
               </ListItem>
             ))}

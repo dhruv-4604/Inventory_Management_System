@@ -139,7 +139,7 @@ const PriceListPage = () => {
                 <TableCell>{item.quantity}</TableCell>
                 <TableCell>{categories[item.category] || 'Unknown'}</TableCell>
                 <TableCell>{item.description}</TableCell>
-                <TableCell align="right">{item.selling_price}</TableCell>
+                <TableCell align="right">₹ {item.selling_price}</TableCell>
               </TableRow>
             ))}
           </TableBody>

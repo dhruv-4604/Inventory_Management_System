@@ -155,9 +155,6 @@ const VendorsPage = () => {
               <TableCell sx={{ fontWeight: 'bold' }}>EMAIL</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>PHONE NUMBER</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>ADDRESS</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>STATE</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>CITY</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>PINCODE</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -167,9 +164,6 @@ const VendorsPage = () => {
                 <TableCell>{vendor.email}</TableCell>
                 <TableCell>{vendor.phone_number}</TableCell>
                 <TableCell>{vendor.address}</TableCell>
-                <TableCell>{vendor.state}</TableCell>
-                <TableCell>{vendor.city}</TableCell>
-                <TableCell>{vendor.pincode}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -188,7 +182,7 @@ const VendorsPage = () => {
                 onChange={(e) => setNewVendor({ ...newVendor, name: e.target.value })}
               />
             </Grid>
-            <Grid item xs={6}>
+            <Grid item xs={7}>
               <TextField
                 fullWidth
                 label="Email"
@@ -196,7 +190,7 @@ const VendorsPage = () => {
                 onChange={(e) => setNewVendor({ ...newVendor, email: e.target.value })}
               />
             </Grid>
-            <Grid item xs={6}>
+            <Grid item xs={7}>
               <TextField
                 fullWidth
                 label="Phone Number"
@@ -214,30 +208,7 @@ const VendorsPage = () => {
                 rows={3}
               />
             </Grid>
-            <Grid item xs={4}>
-              <TextField
-                fullWidth
-                label="State"
-                value={newVendor.state}
-                onChange={(e) => setNewVendor({ ...newVendor, state: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <TextField
-                fullWidth
-                label="City"
-                value={newVendor.city}
-                onChange={(e) => setNewVendor({ ...newVendor, city: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <TextField
-                fullWidth
-                label="Pincode"
-                value={newVendor.pincode}
-                onChange={(e) => setNewVendor({ ...newVendor, pincode: e.target.value })}
-              />
-            </Grid>
+         
           </Grid>
         </DialogContent>
         <DialogActions>

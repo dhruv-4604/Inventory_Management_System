@@ -165,12 +165,12 @@ const OrderItemsTable = ({ orderItems, availableItems, onItemChange, onAddItem, 
               </TableCell>
               <TableCell>
                 {item.item && item.item.selling_price !== undefined
-                  ? `$${item.item.selling_price}`
+                  ? `₹ ${item.item.selling_price}`
                   : '-'}
               </TableCell>
               <TableCell>
                 {item.item && item.quantity
-                  ? `$${(item.item.selling_price * item.quantity)}`
+                  ? `₹ ${(item.item.selling_price * item.quantity)}`
                   : '-'}
               </TableCell>
               <TableCell>
@@ -196,7 +196,7 @@ const OrderSummary = ({ order, onOrderChange, total }) => {
         InputProps={{ inputProps: { min: 0 } }}
         sx={{ width: '200px', mb: 1 }}
       />
-      <Typography variant="h6">Total: ${total}</Typography>
+      <Typography variant="h6">Total: ₹ {total}</Typography>
       <FormControl sx={{ width: '200px', mt: 1 }}>
         <InputLabel>Payment Status</InputLabel>
         <Select

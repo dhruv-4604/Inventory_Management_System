@@ -186,7 +186,7 @@ const PurchaseOrdersPage = () => {
                     <TableCell>{formatDate(order.date)}</TableCell>
                     <TableCell>{order.purchase_order_id}</TableCell>
                     <TableCell>{order.vendor_name}</TableCell>
-                    <TableCell>{`$${order.total_amount}`}</TableCell>
+                    <TableCell>{`₹ ${order.total_amount}`}</TableCell>
                     <TableCell>
                       {order.payment_status ? (
                         'Paid'
