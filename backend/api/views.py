@@ -280,6 +280,7 @@ class SaleOrderView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+   
     def generate_invoice_pdf(self, sale_order):
         buffer = BytesIO()
         p = canvas.Canvas(buffer, pagesize=letter)
@@ -287,61 +288,73 @@ class SaleOrderView(APIView):
 
         # Set up the PDF
         company = Company.objects.get(user=sale_order.user)
-        # if company.company_logo:
-        #     logo_path = company.company_logo.path
-        #     p.drawImage(logo_path, 50, height - 100, width=100, height=50)  # Adjust the size and position as needed
+        
+        # Logo placement on the right side
+        logo_width = 100  # Adjust as needed
+        logo_height = 60  # Adjust as needed
+        if company.company_logo:
+            logo_path = company.company_logo.path
+            p.drawImage(logo_path, width - logo_width - 50, height - 110, width=logo_width, height=logo_height)
+
+        # Start company details on the left side, shifted upwards
+        y_position = height - 60  # Adjusted from height - 100 to height - 80
 
         p.setFont("Helvetica-Bold", 16)
-        p.drawString(50, height - 50, "Max Electronics")
+        p.drawString(50, y_position, company.company_name)
+        y_position -= 25  # Move down for next line
 
         # Add company details
         p.setFont("Helvetica", 10)
-        p.drawString(50, height - 70, f"A 204,Shivaji Nagar, Bengaluru")
-        p.drawString(50, height - 85, f"GSTIN/UIN: {company.gst_number}")
-        p.drawString(50, height - 100, f"State Name: Karnataka, Code: 29")
-        p.drawString(50, height - 115, f"Contact: +91 9123456")
-        p.drawString(50, height - 130, f"E-Mail: Max@maxelectronics.com")
-        p.drawString(50, height - 145, f"www.maxelectronics.com")
+        
+        # Split address into two lines if it's too long
+        address = company.address
+        if len(address) > 40:  # Adjust this value based on your needs
+            split_index = address.rfind(' ', 0, 40)
+            address_line1 = address[:split_index]
+            address_line2 = address[split_index+1:]
+            p.drawString(50, y_position, address_line1)
+            y_position -= 15
+            p.drawString(50, y_position, address_line2)
+            y_position -= 15
+        else:
+            p.drawString(50, y_position, address)
+            y_position -= 15
 
-        # Add invoice details
-        p.setFont("Helvetica-Bold", 12)
-        p.drawString(400, height - 50, f"Voucher No: {sale_order.sale_order_id}")
-        p.drawString(400, height - 65, f"Dated: {sale_order.date.strftime('%d-%b-%Y')}")
-        p.drawString(400, height - 80, "Mode/Terms of Payment")
-        p.drawString(400, height - 95, "15 Days Via Cheque")
+        p.drawString(50, y_position, f"GSTIN/UIN: {company.gst_number}")
+        y_position -= 15
+        p.drawString(50, y_position, f"State Name: {company.state}, Code: {company.pincode}")
+        y_position -= 15
+        p.drawString(50, y_position, f"Contact: {sale_order.user.phone_number}")
+        y_position -= 15
+        p.drawString(50, y_position, f"E-Mail: {sale_order.user.email}")
 
         # Add customer details
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(50, height - 210, "Despatch To")
+        
         p.setFont("Helvetica", 10)
-        p.drawString(50, height - 180, "Despatch To")
-        p.drawString(50, height - 195, f"{sale_order.customer_name}")
-        p.drawString(50, height - 210, f"{sale_order.customer_address}")
-        p.drawString(50, height - 225, f"{sale_order.customer_city}, {sale_order.customer_state} - {sale_order.customer_pincode}")
-        p.drawString(50, height - 240, f"GSTIN/UIN: {company.gst_number}")
-        p.drawString(50, height - 255, f"State Name: {sale_order.customer_state}, Code: 29")
-
-        # Add delivery details
-        p.drawString(400, height - 180, "Buyer's Ref./Order No.")
-        p.drawString(400, height - 195, f"{sale_order.sale_order_id}")
-        p.drawString(400, height - 210, "Despatch through")
-        p.drawString(400, height - 225, "By Road")
-        p.drawString(400, height - 240, "Terms of Delivery")
-        p.drawString(400, height - 255, "Ex-Factory Delivery")
+        p.drawString(50, height - 225, f"{sale_order.customer_name}")
+        p.drawString(50, height - 240, f"{sale_order.customer_address}")
+        p.drawString(50, height - 255, f"{sale_order.customer_city}, {sale_order.customer_state} - {sale_order.customer_pincode}")
+        p.drawString(50, height - 270, f"GSTIN/UIN: {company.gst_number}")
+        p.drawString(50, height - 285, f"State Name: {sale_order.customer_state}, Code: 29")
 
         # Create table for order items
-        data = [["SI No", "Description of Goods", "HSN/SAC", "Due on", "Quantity", "Rate", "per", "Amount"]]
-        for index, item in enumerate(sale_order.items.all(), start=1):
+        data = [["SI No", "Item Name", "Due on", "Quantity", "Rate", "per", "Amount"]]
+        for index, sale_order_item in enumerate(sale_order.items.all(), start=1):
+            # Fetch the item from the Item model
+            item = get_object_or_404(Item, item_id=sale_order_item.item_id)
             data.append([
                 str(index),
-                str(item.item_id),
-                "8471",
+                item.name,  # Use the name from the Item model
                 "3 Days",
-                str(item.quantity),
-                f"{item.rate:.2f}",
+                str(sale_order_item.quantity),
+                f"{sale_order_item.rate:.2f}",
                 "Nos",
-                f"{item.quantity * item.rate:.2f}"
+                f"{sale_order_item.quantity * sale_order_item.rate:.2f}"
             ])
 
-        table = Table(data, colWidths=[0.5*inch, 2*inch, 0.8*inch, 0.8*inch, 0.8*inch, 1*inch, 0.5*inch, 1*inch])
+        table = Table(data, colWidths=[0.5*inch, 2*inch, 1*inch, 0.8*inch, 0.8*inch, 0.8*inch, 1*inch])
         table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
@@ -364,10 +377,10 @@ class SaleOrderView(APIView):
 
         # Add total amount and taxes
         p.setFont("Helvetica-Bold", 10)
-        p.drawString(400, height - 520, f"Subtotal: INR {sale_order.total_amount}")
-        p.drawString(400, height - 535, f"Central Tax: INR {sale_order.total_amount }")
-        p.drawString(400, height - 550, f"State Tax: INR {sale_order.total_amount }")
-        p.drawString(400, height - 565, f"Total: INR {sale_order.total_amount }")
+        p.drawString(410, height - 520, f"Subtotal: INR {sale_order.total_amount}")
+        p.drawString(410, height - 535, f"Central Tax: INR {sale_order.total_amount }")
+        p.drawString(410, height - 550, f"State Tax: INR {sale_order.total_amount }")
+        p.drawString(410, height - 565, f"Total: INR {sale_order.total_amount }")
 
         # Add amount in words
         p.setFont("Helvetica", 10)
@@ -402,6 +415,7 @@ class SaleOrderView(APIView):
         mail.attach_file(f"{settings.BASE_DIR}/media/invoices/invoice_{sale_order.sale_order_id}.pdf")
         mail.send()
 
+        
     def get(self, request):
         sale_orders = SaleOrder.objects.filter(user=request.user)
         serializer = SaleOrderSerializer(sale_orders, many=True)
