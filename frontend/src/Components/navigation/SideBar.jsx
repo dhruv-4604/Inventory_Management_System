@@ -128,7 +128,7 @@ function Sidebar() {
       ]
     },
     { 
-      icon: <Typography variant="h6" component="span" sx={{ fontWeight: 'bold', fontSize: '1.25rem' }}>₹</Typography>, 
+      icon: <Typography variant="h6" component="span" sx={{ fontWeight: 'bold', fontSize: '1.50rem',marginLeft:"4px" }}>₹</Typography>, 
       text: 'Sales', 
       isExpandable: true, 
       to: '/sales', 
