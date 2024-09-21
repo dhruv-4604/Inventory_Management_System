@@ -18,6 +18,7 @@ import EmailIcon from '@mui/icons-material/Email';
 import LockIcon from '@mui/icons-material/Lock';
 import BusinessIcon from '@mui/icons-material/Business';
 import PhoneIcon from '@mui/icons-material/Phone';
+import PersonIcon from '@mui/icons-material/Person';
 import googleIcon from '../../assets/google_icon.png';
 import illustration from '../../assets/Illustration_Image.png';
 import mainLogo from '../../assets/logo.png';
@@ -159,6 +160,9 @@ const SignUpPage = () => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               sx={{ mb: 2 }}
+              InputProps={{
+                startAdornment: <PersonIcon sx={{ color: 'action.active', mr: 1 }} />,
+              }}
             />
             <StyledTextField 
               fullWidth
