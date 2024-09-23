@@ -296,7 +296,7 @@ function Sidebar() {
           paddingRight:'12px',
           border: '1.4px solid #AEAEAE',
         }}>
-          <Avatar src="/path-to-profile-image.jpg" alt="Parth" sx={{ width: 40, height: 40, mr: 2 }} />
+          <Avatar src="/path-to-profile-image.jpg" alt={name} sx={{ width: 40, height: 40, mr: 2 }} />
           <Box sx={{ flexGrow: 1 }}>
             <Typography pb="-2px" variant="subtitle2" sx={{ fontWeight: 'semibold', fontSize:"17px" }}>{name}</Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary', fontSize:"11px"}}>{email}</Typography>
