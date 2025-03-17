@@ -29,9 +29,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-)l748qkh4$gzwnk1b89xu#6$243w^tud96$&lqmtzmvj7w=83r'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '3.110.185.122', 'supplysync.online', 'backend.supplysync.online']
+ALLOWED_HOSTS = ['3.110.185.122', 'supplysync.online', 'backend.supplysync.online']
 
 
 
