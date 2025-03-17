@@ -31,7 +31,7 @@ SECRET_KEY = 'django-insecure-)l748qkh4$gzwnk1b89xu#6$243w^tud96$&lqmtzmvj7w=83r
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['3.110.185.122', 'supplysync.online', 'backend.supplysync.online']
+ALLOWED_HOSTS = ['*']
 
 
 
