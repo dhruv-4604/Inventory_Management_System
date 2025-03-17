@@ -4,7 +4,7 @@ import { ACCESS_TOKEN } from "./constants";
 
 
 const api = axios.create({
-  baseURL: "http://3.110.185.122:8000",
+  baseURL: "https://backend.supplysync.online/",
 });
 
 api.interceptors.request.use(
