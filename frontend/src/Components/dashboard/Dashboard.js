@@ -40,6 +40,7 @@ const Dashboard = () => {
 
   return (
     <Box sx={{ p: 3 }}>
+    <h1>Vatsal</h1>
       <Grid container spacing={3}>
         {/* Total Revenue */}
         <Grid item xs={12} sm={6} md={3}>

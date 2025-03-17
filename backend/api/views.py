@@ -397,7 +397,7 @@ class SaleOrderView(APIView):
 
         # Add footer
         p.setFont("Helvetica", 8)
-        p.drawString(inch, 0.75 * inch, "This is a Computer Generated Document")
+        p.drawString(inch, 0.75 * inch, "This is a Computer Generated Document. No Signature Required.")
 
         p.showPage()
         p.save()
