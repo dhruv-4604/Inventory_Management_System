@@ -128,7 +128,7 @@ function ItemDetailView({ open, onClose, item, onItemDeleted, onItemUpdated, cat
             >
               <Box
                 component="img"
-                src={item.image ? `http://127.0.0.1:8000${item.image}` : NoProductImage}
+                src={item.image ? `https://backend.supplysync.online${item.image}` : NoProductImage}
                 alt={item.name}
                 sx={{
                   width: '100%',

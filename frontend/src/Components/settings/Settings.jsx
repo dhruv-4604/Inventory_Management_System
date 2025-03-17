@@ -36,7 +36,7 @@ function Settings() {
         const companyRes = await api.get('/company/');
         setUserData({ ...userRes.data, ...companyRes.data });
         if (companyRes.data.company_logo) {
-          setLogoPreview(`http://127.0.0.1:8000${companyRes.data.company_logo}`);
+          setLogoPreview(`https://backend.supplysync.online${companyRes.data.company_logo}`);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -167,7 +167,7 @@ function Settings() {
                   <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center', mb: 3, position: 'relative' }}>
                     <SquareImage
                       alt="Company Logo"
-                      src={logoPreview || "http://127.0.0.1:8000/media/default_logo.png"}
+                      src={logoPreview || "https://backend.supplysync.online/media/default_logo.png"}
                       sx={{ width: 100, height: 100 }}
                     />
                     <input

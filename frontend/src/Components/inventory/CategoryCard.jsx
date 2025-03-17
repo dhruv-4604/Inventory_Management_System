@@ -292,7 +292,7 @@ const CategoryCard = ({ category, items, onItemsUpdated, onCategoryDeleted }) =>
         <CardMedia
           component="img"
           height="180"
-          image={"http://127.0.0.1:8000"+category.image}
+          image={"https://backend.supplysync.online"+category.image}
           alt={category.name}
         />
         <StyledCardContent>

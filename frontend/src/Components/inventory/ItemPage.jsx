@@ -305,7 +305,7 @@ function ItemPage() {
                     <TableCell key={column.key} align={column.align} sx={{ padding: "10px 16px" }}>
                       {column.key === "image" ? (
                         <SquareImage 
-                          src={item[column.key] ? `http://127.0.0.1:8000${item[column.key]}` : NoProductListImage} 
+                          src={item[column.key] ? `https://backend.supplysync.online${item[column.key]}` : NoProductListImage} 
                           alt={item.name} 
                         />
                       ) : column.key === "selling_price" ? (
