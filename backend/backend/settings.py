@@ -31,7 +31,7 @@ SECRET_KEY = 'django-insecure-)l748qkh4$gzwnk1b89xu#6$243w^tud96$&lqmtzmvj7w=83r
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["backend.supplysync.online", "supplysync.online"]
 
 
 
@@ -169,3 +169,10 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 from django.conf import settings
 from django.conf.urls.static import static
+# Ensure Django knows it's behind a proxy
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Allow CloudFront requests
+
+# Ensure static file URLs are absolute for CloudFront
+STATIC_URL = "https://d1jkbtyfd84pmi.cloudfront.net/static/"
