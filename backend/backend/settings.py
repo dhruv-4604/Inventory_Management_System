@@ -19,6 +19,8 @@ ALLOWED_HOSTS = [
     "supplysync.online",
     "d1jkbtyfd84pmi.cloudfront.net",  # CloudFront Distribution
     "www.supplysync.online",
+    "localhost",
+    "127.0.0.1",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
